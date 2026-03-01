@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミューズパス テレアポ・アシスタント</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
+            --accent: #f59e0b;
+            --accent-light: #fef3c7;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --radius: 12px;
+        }
+
+        [data-theme="dark"] {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #1e3a5f;
+            --accent: #f59e0b;
+            --accent-light: #422006;
+            --success: #34d399;
+            --success-light: #064e3b;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo { font-size: 28px; }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            font-size: 11px;
+            opacity: 0.85;
+            margin-top: -2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .theme-toggle, .font-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover, .font-btn:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .nav::-webkit-scrollbar { display: none; }
+
+        .nav-item {
+            flex: 1;
+            min-width: fit-content;
+            padding: 14px 16px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover { color: var(--primary); background: var(--primary-light); }
+
+        .nav-item.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .nav-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+
+        /* Main Content */
+        .main { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Search */
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 16px;
+            background: var(--card);
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus { border-color: var(--primary); }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: var(--text-secondary);
+        }
+
+        .search-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            padding-left: 4px;
+        }
+
+        /* Categories */
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .category-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+
+        .category-chip:hover, .category-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* QA Card */
+        .qa-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: box-shadow 0.2s;
+        }
+
+        .qa-card:hover { box-shadow: var(--shadow-lg); }
+
+        .qa-question {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .qa-question .badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-company { background: #dbeafe; color: #1d4ed8; }
+        .badge-service { background: #fce7f3; color: #be185d; }
+        .badge-cost { background: #d1fae5; color: #065f46; }
+        .badge-objection { background: #fee2e2; color: #991b1b; }
+        .badge-other { background: #f3e8ff; color: #6b21a8; }
+        .badge-trust { background: #fef3c7; color: #92400e; }
+
+        [data-theme="dark"] .badge-company { background: #1e3a5f; color: #93c5fd; }
+        [data-theme="dark"] .badge-service { background: #4a1942; color: #f9a8d4; }
+        [data-theme="dark"] .badge-cost { background: #064e3b; color: #6ee7b7; }
+        [data-theme="dark"] .badge-objection { background: #450a0a; color: #fca5a5; }
+        [data-theme="dark"] .badge-other { background: #3b0764; color: #d8b4fe; }
+        [data-theme="dark"] .badge-trust { background: #422006; color: #fcd34d; }
+
+        .qa-toggle {
+            margin-left: auto;
+            font-size: 20px;
+            color: var(--text-secondary);
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+
+        .qa-card.open .qa-toggle { transform: rotate(180deg); }
+
+        .qa-answer {
+            display: none;
+            padding: 0 20px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .qa-card.open .qa-answer { display: block; }
+
+        .answer-section {
+            margin-top: 12px;
+        }
+
+        .answer-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .answer-points {
+            list-style: none;
+            padding: 0;
+        }
+
+        .answer-points li {
+            padding: 6px 0 6px 20px;
+            position: relative;
+            font-size: 14px;
+        }
+
+        .answer-points li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .script-box {
+            background: var(--accent-light);
+            border-left: 4px solid var(--accent);
+            padding: 14px 16px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .script-label {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        /* Objection Cards */
+        .objection-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .objection-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .objection-emoji { font-size: 24px; }
+
+        .objection-body {
+            display: none;
+            padding: 0 20px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .objection-card.open .objection-body { display: block; }
+
+        .response-step {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            align-items: flex-start;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content { font-size: 14px; }
+        .step-content strong { color: var(--primary); }
+
+        /* Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-icon { font-size: 32px; margin-bottom: 8px; }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .achievement-list { margin-top: 16px; }
+
+        .achievement {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--card);
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .achievement.unlocked { border-left: 4px solid var(--success); }
+        .achievement.locked { opacity: 0.5; border-left: 4px solid var(--border); }
+
+        .achievement-icon { font-size: 28px; }
+        .achievement-text { font-size: 14px; font-weight: 600; }
+        .achievement-desc { font-size: 12px; color: var(--text-secondary); }
+
+        /* Daily Record */
+        .record-form {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .form-group textarea { min-height: 80px; resize: vertical; }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover { background: var(--primary-dark); }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Motivation */
+        .motivation-card {
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: white;
+            border-radius: var(--radius);
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .motivation-card .quote {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .motivation-card .author {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .tip-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--accent);
+            border-right: 1px solid var(--border);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tip-title {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+
+        .tip-body {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* History */
+        .history-entry {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 8px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-date { font-weight: 600; font-size: 14px; }
+        .history-stats { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); }
+        .history-stat-val { font-weight: 700; color: var(--text); }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+
+        /* Dig Deeper Cards */
+        .dig-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            transition: box-shadow 0.2s;
+        }
+
+        .dig-card:hover { box-shadow: var(--shadow-lg); }
+
+        .dig-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dig-emoji { font-size: 24px; flex-shrink: 0; }
+
+        .dig-question {
+            font-weight: 600;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .dig-body {
+            display: none;
+            padding: 0 20px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .dig-card.open .dig-body { display: block; }
+
+        .dig-meta {
+            margin-top: 12px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .dig-meta-item {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .dig-meta-item.purpose {
+            background: var(--primary-light);
+            border-left: 3px solid var(--primary);
+        }
+
+        .dig-meta-item.followup {
+            background: var(--success-light);
+            border-left: 3px solid var(--success);
+        }
+
+        .dig-meta-item.timing {
+            background: var(--accent-light);
+            border-left: 3px solid var(--accent);
+        }
+
+        .dig-meta-label {
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .dig-meta-item.purpose .dig-meta-label { color: var(--primary); }
+        .dig-meta-item.followup .dig-meta-label { color: var(--success); }
+        .dig-meta-item.timing .dig-meta-label { color: var(--accent); }
+
+        .phase-header {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary);
+            padding: 12px 0 8px;
+            border-bottom: 2px solid var(--primary);
+            margin-bottom: 12px;
+            margin-top: 8px;
+        }
+
+        .phase-header:first-child { margin-top: 0; }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .header h1 { font-size: 16px; }
+            .main { padding: 12px; }
+            .form-row { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .nav-item { padding: 10px 12px; font-size: 11px; }
+        }
+
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .login-overlay.hidden { display: none; }
+
+        .login-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: var(--shadow-lg);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-card h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .login-card p {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .login-form input {
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .login-btn {
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-btn:hover { background: var(--primary-dark); }
+
+        .login-users-list {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .login-users-list p {
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .login-user-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .login-user-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        /* User Badge in Header */
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 14px;
+            margin-right: auto;
+            margin-left: 16px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .logout-btn:hover { background: rgba(255,255,255,0.35); }
+
+        /* Team Table */
+        .team-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .team-table th, .team-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .team-table th {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .team-table tr:hover { background: var(--primary-light); }
+
+        .team-table tr.current-user { background: var(--accent-light); border-left: 4px solid var(--accent); }
+
+        .team-table tr.summary {
+            background: var(--bg);
+            font-weight: 600;
+            border-top: 2px solid var(--primary);
+        }
+
+        .team-table tr.summary td { padding: 16px; }
+
+        /* Comments Section */
+        .comment-form {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .comment-form-group {
+            margin-bottom: 16px;
+        }
+
+        .comment-form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+
+        .comment-form-group select,
+        .comment-form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .comment-form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .comment-form-group textarea:focus,
+        .comment-form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .comment-form button {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .comment-form button:hover { background: var(--primary-dark); }
+
+        .comment-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .comment-filter-chip {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .comment-filter-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .comment-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .comment-time {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .comment-category {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .comment-text {
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
+
+        .empty-state p { font-size: 14px; }
+    </style>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-card">
+            <h2>👤 ログイン</h2>
+            <p>アシスタント名を入力してログイン</p>
+            <div class="login-form">
+                <input type="text" id="login-input" placeholder="例：田中太郎" autocomplete="off" onkeypress="if(event.key==='Enter') handleLogin()">
+                <button class="login-btn" onclick="handleLogin()">ログイン 👉</button>
+            </div>
+            <div class="login-users-list" id="login-users-list" style="display:none;">
+                <p>最近使用したユーザー</p>
+                <div id="recent-users"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <span class="logo">📞</span>
+            <div>
+                <h1>ミューズパス テレアポ・アシスタント</h1>
+                <div class="header-subtitle">内定辞退者再アプローチ支援ツール</div>
+            </div>
+        </div>
+        <div class="user-badge">
+            <span id="current-user-name">ゲスト</span>
+            <button class="logout-btn" onclick="handleLogout()">ログアウト</button>
+        </div>
+        <div class="header-actions">
+            <button class="font-btn" onclick="changeFontSize(-1)" title="文字を小さく">A-</button>
+            <button class="font-btn" onclick="changeFontSize(1)" title="文字を大きく">A+</button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="テーマ切替">🌙</button>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <div class="nav-item active" onclick="switchTab('qa', this)">
+            <span class="nav-icon">❓</span>Q&A
+        </div>
+        <div class="nav-item" onclick="switchTab('dig', this)">
+            <span class="nav-icon">⛏️</span>深掘り
+        </div>
+        <div class="nav-item" onclick="switchTab('objection', this)">
+            <span class="nav-icon">🛡️</span>切り返し
+        </div>
+        <div class="nav-item" onclick="switchTab('dashboard', this)">
+            <span class="nav-icon">📊</span>成長記録
+        </div>
+        <div class="nav-item" onclick="switchTab('team', this)">
+            <span class="nav-icon">👥</span>チーム
+        </div>
+        <div class="nav-item" onclick="switchTab('comments', this)">
+            <span class="nav-icon">💬</span>意見交換
+        </div>
+        <div class="nav-item" onclick="switchTab('motivation', this)">
+            <span class="nav-icon">💪</span>モチベ
+        </div>
+    </div>
+
+    <div class="main">
+        <!-- Q&A Tab -->
+        <div id="tab-qa" class="tab-content active">
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="qa-search" placeholder="キーワードで検索（例：定着率、料金、実績）" oninput="filterQA()">
+                <div class="search-hint">💡 通話中にサッと検索！キーワードを入力すると即座に絞り込みます</div>
+            </div>
+
+            <div class="categories" id="qa-categories"></div>
+            <div id="qa-list"></div>
+        </div>
+
+        <!-- Dig Deeper Tab -->
+        <div id="tab-dig" class="tab-content">
+            <h2 style="margin-bottom:8px; font-size:18px;">⛏️ 深掘り質問集</h2>
+            <p style="margin-bottom:20px; color:var(--text-secondary); font-size:14px;">Q&Aが一往復終わったら、こちらから攻めの質問を投げて潜在ニーズを掘り起こそう！<br>質問の流れに沿って上から順番に使うと自然な会話になります。</p>
+            <div class="categories" id="dig-categories"></div>
+            <div id="dig-list"></div>
+        </div>
+
+        <!-- Objection Tab -->
+        <div id="tab-objection" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+                <h2 style="font-size:18px;">🛡️ 切り返しトーク集</h2>
+                <button id="call-mode-toggle" class="btn btn-primary" onclick="toggleCallMode()" style="font-size:16px; padding:10px 20px;">📞 通話中モード ON</button>
+            </div>
+            <p id="objection-desc" style="margin-bottom:20px; color:var(--text-secondary); font-size:14px;">断られたときの対応フレーズ集です。落ち着いて、まず共感してから切り返しましょう。</p>
+
+            <!-- 通常モード -->
+            <div id="objection-list"></div>
+
+            <!-- 通話中モード -->
+            <div id="call-mode" style="display:none;">
+                <div id="call-mode-buttons" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"></div>
+                <div id="call-mode-response" style="display:none; margin-top:20px; padding:20px; background:var(--primary-light); border-radius:var(--radius); border:2px solid var(--primary);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <h3 id="call-mode-title" style="font-size:18px;"></h3>
+                        <button onclick="closeCallResponse()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text);">✕</button>
+                    </div>
+                    <div id="call-mode-steps" style="font-size:16px; line-height:1.8;"></div>
+                    <div id="call-mode-next" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="tab-dashboard" class="tab-content">
+            <h2 style="margin-bottom:16px; font-size:18px;">📊 成長ダッシュボード</h2>
+
+            <!-- 今日の改善1つ -->
+            <div id="next-action-card" style="display:none; margin-bottom:20px; padding:16px 20px; background:linear-gradient(135deg, var(--accent-light), var(--primary-light)); border-radius:var(--radius); border-left:4px solid var(--accent);">
+                <div style="font-size:13px; font-weight:600; color:var(--accent); margin-bottom:6px;">🎯 今日の改善ポイント</div>
+                <div id="next-action-text" style="font-size:15px; line-height:1.6;"></div>
+            </div>
+
+            <div class="stats-grid" id="stats-grid"></div>
+
+            <!-- Record Form -->
+            <div class="record-form">
+                <h3 style="margin-bottom:16px; font-size:16px;">📝 今日の記録</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📞 架電数</label>
+                        <input type="number" id="input-calls" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>🗣️ 通話数（つながった数）</label>
+                        <input type="number" id="input-connects" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🎯 アポ獲得数</label>
+                        <input type="number" id="input-appointments" min="0" value="0">
+                    </div>
+                    <div class="form-group"></div>
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label>📝 今日の気づき・メモ</label>
+                    <textarea id="input-memo" placeholder="うまくいったこと、学んだことなどを記録しよう"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="saveRecord()">記録を保存する 💾</button>
+            </div>
+
+            <!-- History -->
+            <h3 style="margin:24px 0 12px; font-size:16px;">📅 過去の記録</h3>
+            <div id="history-list"></div>
+        </div>
+
+        <!-- Team Tab -->
+        <div id="tab-team" class="tab-content">
+            <h2 style="margin-bottom:16px; font-size:18px;">👥 チームダッシュボード</h2>
+            <p style="margin-bottom:20px; color:var(--text-secondary); font-size:14px;">チーム全体のパフォーマンスを比較して、学習を深めよう！</p>
+            <table class="team-table" id="team-table">
+                <thead>
+                    <tr>
+                        <th>名前</th>
+                        <th>累計架電数</th>
+                        <th>累計通話数</th>
+                        <th>累計アポ数</th>
+                        <th>接続率</th>
+                        <th>アポ率</th>
+                    </tr>
+                </thead>
+                <tbody id="team-tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- Comments Tab -->
+        <div id="tab-comments" class="tab-content">
+            <h2 style="margin-bottom:16px; font-size:18px;">💬 意見交換</h2>
+            <p style="margin-bottom:20px; color:var(--text-secondary); font-size:14px;">チーム内で成功事例や質問をシェア。一緒に成長しよう！</p>
+
+            <!-- Comment Form -->
+            <div class="comment-form">
+                <h3 style="margin-bottom:16px; font-size:16px;">✍️ コメントを投稿</h3>
+                <div class="comment-form-group">
+                    <label>カテゴリ</label>
+                    <select id="comment-category">
+                        <option value="改善提案">改善提案</option>
+                        <option value="成功事例共有">成功事例共有</option>
+                        <option value="質問">質問</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                <div class="comment-form-group">
+                    <label>コメント</label>
+                    <textarea id="comment-text" placeholder="思いっきり投稿してください！チーム全体で学べます。"></textarea>
+                </div>
+                <button onclick="submitComment()">投稿する 💬</button>
+            </div>
+
+            <!-- Comment Filters -->
+            <div class="comment-filters">
+                <div class="comment-filter-chip active" onclick="filterComments('all', this)">すべて</div>
+                <div class="comment-filter-chip" onclick="filterComments('改善提案', this)">改善提案</div>
+                <div class="comment-filter-chip" onclick="filterComments('成功事例共有', this)">成功事例共有</div>
+                <div class="comment-filter-chip" onclick="filterComments('質問', this)">質問</div>
+                <div class="comment-filter-chip" onclick="filterComments('その他', this)">その他</div>
+            </div>
+
+            <!-- Comments List -->
+            <div id="comments-list"></div>
+        </div>
+
+        <!-- Motivation Tab -->
+        <div id="tab-motivation" class="tab-content">
+            <div class="motivation-card" id="daily-quote"></div>
+
+            <h3 style="margin-bottom:16px; font-size:18px;">🔥 トップセールスの極意</h3>
+            <div id="tips-list"></div>
+        </div>
+    </div>
+
+    <script>
+    // ===== DATA（外部JSON対応: data/*.json から読み込み可能）=====
+    // ※ インラインデータはフォールバック用。data/*.json を編集すればデータ管理が楽になります。
+    let qaData = [
+        // サービスの仕組み
+        {
+            category: "サービスの仕組み",
+            badge: "service",
+            question: "内定辞退者の情報を御社に共有する必要があるということですか？",
+            points: [
+                "内定辞退が出た段階で、貴社から候補者へ許諾を取っていただく",
+                "「辞退後も連絡を取り合ってよいか」の許諾が必要",
+                "許諾を得た学生を弊社のブラウザ上システムで管理",
+                "定期的にアプローチしていく流れ"
+            ],
+            script: "はい、その通りです。内定辞退が出た段階で、貴社から候補者の方へ「辞退後も連絡を取り合ってよいか」の許諾を取っていただく必要がございます。その許諾を得られた学生を弊社のシステムで管理し、定期的にアプローチしていく流れになります。"
+        },
+        {
+            category: "サービスの仕組み",
+            badge: "service",
+            question: "辞退された方には、御社からアプローチをかけるのですか？",
+            points: [
+                "弊社からLINEやメール等で定期的に連絡を取る",
+                "第三者が介在することで、学生側の心理的ハードルを軽減",
+                "スムーズな関係性維持が可能"
+            ],
+            script: "はい、弊社からLINEやメール等で定期的に連絡を取らせていただきます。第三者である弊社が間に入ることで、学生様も気兼ねなくコミュニケーションが取れる環境を作っております。"
+        },
+        {
+            category: "サービスの仕組み",
+            badge: "service",
+            question: "自分たち（自社）でも後追い（フォロー）できるのではないですか？",
+            points: [
+                "もちろん自社でも可能",
+                "ただし学生側の視点では、一度辞退した企業からの直接連絡は「気まずい」",
+                "心理的ハードルが高いのが実情",
+                "第三者（弊社）が介在することでハードルを下げる",
+                "スムーズに関係性を維持できる"
+            ],
+            script: "もちろん御社で直接フォローすることも可能です。ただ、学生側の視点に立ちますと、一度辞退した企業から直接連絡が来るのは「気まずい」と感じる方が多く、心理的なハードルが高いのが実情です。第三者である弊社が介在することで、そのハードルを下げ、スムーズに関係性を維持することが可能です。"
+        },
+        {
+            category: "サービスの仕組み",
+            badge: "service",
+            question: "辞退した学生へのフォローなら、自社（人事）で直接メールや電話をすれば済む話ではないですか？",
+            points: [
+                "物理的には可能だが、多くの企業が「学生側の心理的ハードル」の壁に直面",
+                "学生にとって辞退した企業は「断りを入れた相手」→直接連絡に「気まずい」「申し訳ない」という心理が働く",
+                "せっかく連絡しても無視されたり距離を置かれるケースが少なくない",
+                "ミューズパスという第三者の仕組みを通じて緩やかにつながることで心理的負担を大幅に軽減",
+                "自社で後追いメールを送っていたが返信率が悪く関係が途切れた→弊社サービスへ切り替えた事例が増加中"
+            ],
+            script: "はい、直接ご連絡いただくことも物理的には可能です。ただ、多くの企業様が「学生側の心理的ハードル」という壁に直面されています。学生にとって一度辞退した企業は「断りを入れた相手」ですので、直接連絡が来ると非常に気まずいと感じ、無視されてしまうケースが少なくありません。弊社のような第三者がミューズパスという仕組みを通じて緩やかにつながり続けることで、学生側の心理的負担を大幅に軽減できます。実際に、以前は自社で後追いメールを送っていたが返信率が悪く関係が途切れてしまったという企業様が、弊社のサービスへ切り替えられる事例が増えております。"
+        },
+        {
+            category: "サービスの仕組み",
+            badge: "service",
+            question: "採用した場合は「中途採用」という扱いになりますか？",
+            points: [
+                "中途採用または第二新卒という扱い",
+                "採用区分は貴社の制度に合わせて柔軟に対応可能"
+            ],
+            script: "はい、中途採用または第二新卒という扱いになります。採用区分につきましては、御社の制度に合わせて柔軟に対応可能ですので、詳しくはお打ち合わせの際にご相談ください。"
+        },
+        {
+            category: "サービスの仕組み",
+            badge: "service",
+            question: "具体的なフローはどうなりますか？学生と御社が別途契約を結ぶ形でしょうか？",
+            points: [
+                "許諾をいただいた時点で、弊社ブラウザ上のシステムで情報管理",
+                "学生と弊社が別途契約を結ぶ形ではない",
+                "詳細は商談時に画面をお見せしながら説明"
+            ],
+            script: "許諾をいただいた時点で、弊社のブラウザ上のシステムで情報を管理する形になります。詳細につきましては、商談のお時間をいただければ、実際の画面をお見せしながらわかりやすくご説明させていただきます。"
+        },
+        // 実績・事例
+        {
+            category: "実績・事例",
+            badge: "company",
+            question: "冠婚葬祭（葬祭業）での導入事例はありますか？",
+            points: [
+                "現時点で葬祭業に特化した事例はない",
+                "ただし内定辞退者が年間5名程度の企業でも採用に至ったケースあり",
+                "業種を問わず、辞退者活用（アルムナイ的な動き）は活発化",
+                "次回面談までに近しい業界の事例を調査可能"
+            ],
+            script: "現時点で葬祭業に特化した事例はございませんが、直近では内定辞退者が年間5名程度の企業様でも、このサービスを通じて採用に至ったケースがございます。業種を問わず、辞退者活用いわゆるアルムナイ的な動きは活発化しております。次回のお打ち合わせまでに、近しい業界の事例がないかお探ししておきます。"
+        },
+        // 個人情報・信頼性
+        {
+            category: "個人情報・信頼性",
+            badge: "other",
+            question: "個人情報の取り扱いはどうなっていますか？",
+            points: [
+                "厚生労働省から「HRアワード」を受賞した実績あり",
+                "個人情報保護の観点は非常にクリアな体制で運営",
+                "学生から「ミューズパスというサービスを利用すること」への許諾を得た上で進める",
+                "許諾なしに情報を扱うことは一切ない"
+            ],
+            script: "ご安心ください。弊社は厚生労働省から「HRアワード」の賞もいただいており、個人情報保護の観点については非常にクリアな体制で運営しております。学生様から「ミューズパスというサービスを利用すること」への許諾を得た上で進めますので、ご安心いただければと思います。"
+        }
+    ];
+
+    // ===== 深掘り質問データ =====
+    let digData = [
+        // STEP1: 現状把握
+        {
+            phase: "STEP1：現状把握",
+            emoji: "📊",
+            question: "今、マイナビさんのほうで採用人数を拝見させていただいたのですが、◯名採用されているとのことで、失礼ながら内定辞退者は何名くらいいらっしゃいますか？",
+            purpose: "辞退者数を具体的に聞き出す。数字が出れば「もったいない」に持っていける。",
+            followUp: "辞退者が少ない場合も「少人数でも一度御社に魅力を感じた方ですから、貴重な人材ですよね」と返せる。",
+            timing: "通話序盤。Q&A一往復の直後がベスト。"
+        },
+        {
+            phase: "STEP1：現状把握",
+            emoji: "🔢",
+            question: "ちなみに、その◯名の辞退のうち、内定承諾後の辞退と選考辞退の割合はどのくらいですか？",
+            purpose: "内定承諾後辞退なら「一度は入社を決めた人」→再アプローチの可能性が高いことを示せる。",
+            followUp: "「承諾後辞退の方は特に、御社に魅力を感じていた方なので、再びつながれる可能性が高いんです」",
+            timing: "辞退者数を聞けた後の自然な流れで。"
+        },
+        {
+            phase: "STEP1：現状把握",
+            emoji: "📅",
+            question: "辞退が集中する時期はございますか？例えば、◯月の大手内定出し時期に集中するなど。",
+            purpose: "辞退のパターンを掴み、先手を打てるサービスであることを伝える布石。",
+            followUp: "「その時期に備えて今から仕組みを整えておくことで、来期の採用に大きく貢献できます」",
+            timing: "辞退者数の話が広がった流れで。"
+        },
+        // STEP2: 課題の顕在化
+        {
+            phase: "STEP2：課題の顕在化",
+            emoji: "😔",
+            question: "辞退された後、その学生さんとの関係はどうなっていますか？そのまま途切れてしまうケースが多いですか？",
+            purpose: "「途切れている」と答えれば、それ自体が課題。ミューズパスの価値を提示するチャンス。",
+            followUp: "「実はそこが一番もったいないところでして…一度御社を選ぼうとした方との接点を維持できれば、将来の採用資産になります」",
+            timing: "辞退者の実態を聞けた後。"
+        },
+        {
+            phase: "STEP2：課題の顕在化",
+            emoji: "💸",
+            question: "辞退が出た分を補充するために、追加の採用コスト（広告の再出稿など）はどのくらいかかっていますか？",
+            purpose: "辞退＝コスト増という痛みを数字で意識させる。ミューズパスのROIを訴求する伏線。",
+            followUp: "「辞退者の再活用ができれば、追加の広告費をかけずに候補者を確保できるということになります」",
+            timing: "辞退者の話で「もったいない」雰囲気が出てきたら。"
+        },
+        {
+            phase: "STEP2：課題の顕在化",
+            emoji: "🏃",
+            question: "辞退された学生さんが最終的にどこに入社されたか、把握されていますか？",
+            purpose: "把握できていないことが多い→「弊社なら辞退後も接点を持つので、動向が見えるようになります」",
+            followUp: "「辞退理由や入社先を把握できれば、来期の採用戦略にも活かせますよね」",
+            timing: "辞退の話が深まった段階で。"
+        },
+        // STEP3: ニーズ喚起
+        {
+            phase: "STEP3：ニーズ喚起",
+            emoji: "💎",
+            question: "もし、辞退された方ともう一度つながれるとしたら、御社としては興味はございますか？",
+            purpose: "直球でニーズを確認。「興味ある」と言わせればクロージングに近づく。",
+            followUp: "「実はそれを実現するのがミューズパスというサービスでして、第三者が間に入ることで学生さんの心理的なハードルを下げて再接点を作っています」",
+            timing: "課題が十分に顕在化した後のキメ球。"
+        },
+        {
+            phase: "STEP3：ニーズ喚起",
+            emoji: "🔄",
+            question: "今後、中途や第二新卒の採用を強化されるご予定はございますか？",
+            purpose: "辞退者＝潜在的な第二新卒候補。中途強化の予定があればドンピシャの提案になる。",
+            followUp: "「内定辞退された方は1〜2年後にちょうど第二新卒の時期になります。今のうちにつながりを維持しておけば、そのタイミングで声をかけられます」",
+            timing: "ミューズパスの概要を伝えた後。"
+        },
+        {
+            phase: "STEP3：ニーズ喚起",
+            emoji: "📈",
+            question: "他社さんでは、年間5名程度の辞退者から実際に採用に至った事例がございます。御社でも同じくらいの辞退者がいらっしゃるなら、十分に可能性がありますが、いかがですか？",
+            purpose: "事例×自社の辞退者数で「自分ごと化」させる。",
+            followUp: "「具体的な事例やシステムの画面を、15分ほどでお見せできますが、お時間いただけませんか？」",
+            timing: "アポクロージングの直前。"
+        },
+        // STEP4: アポクロージング
+        {
+            phase: "STEP4：アポクロージング",
+            emoji: "🎯",
+            question: "具体的なサービスの仕組みや事例を、15分ほどお時間いただいてオンラインでご説明させていただけませんか？",
+            purpose: "ストレートにアポを切る。「15分」「オンライン」でハードルを下げる。",
+            followUp: "断られた場合→「では、まずは資料をお送りして、ご興味があればお時間をいただく形でいかがでしょうか？」",
+            timing: "十分にニーズを掘り起こせたタイミングで。"
+        }
+    ];
+
+    let objectionData = [
+        {
+            emoji: "😤",
+            category: "時間がない",
+            phrase: "「今忙しいので…」",
+            response: "「お忙しいところ大変失礼いたしました。1分だけお時間いただけますか？内定辞退された学生さんと再度つながれるサービスのご案内でして…」",
+            nextQuestion: "「改めてお電話させていただきたいのですが、ご都合の良いお時間帯はございますか？」",
+            steps: [
+                { label: "共感する", text: "「お忙しいところ大変失礼いたしました。」" },
+                { label: "時間を限定", text: "「1分だけお時間いただけますか？」" },
+                { label: "価値を伝える", text: "「内定辞退された学生さんと再度つながれるサービスのご案内でして…」" },
+                { label: "代替提案", text: "「改めてお電話させていただきたいのですが、ご都合の良いお時間帯はございますか？」" }
+            ]
+        },
+        {
+            emoji: "🙅",
+            category: "必要ない",
+            phrase: "「間に合っています／辞退者はほとんどいません」",
+            response: "「承知いたしました。素晴らしいことですね。年に数名でも辞退者がいらっしゃれば、一度は御社に魅力を感じた方です。実際に年間5名程度の辞退者から採用に至った企業様もいらっしゃいます。」",
+            nextQuestion: "「辞退者活用の最新トレンド資料をお送りできますが、いかがですか？」",
+            steps: [
+                { label: "受け止める", text: "「承知いたしました。内定辞退が少ないのは素晴らしいことですね。」" },
+                { label: "視点を変える", text: "「年に数名でも辞退者がいらっしゃれば、その方々は一度は御社に魅力を感じた方です。」" },
+                { label: "実例で刺す", text: "「実際に年間5名程度の辞退者から採用に至った企業様もいらっしゃいます。」" },
+                { label: "情報提供", text: "「辞退者活用の最新トレンド資料をお送りできますが、いかがですか？」" }
+            ]
+        },
+        {
+            emoji: "🤷",
+            category: "自社対応",
+            phrase: "「自社でもフォローできるので…」",
+            response: "「おっしゃる通りです。ただ、一度辞退した企業から直接連絡が来ると『気まずい』と感じる学生が多いのが実情です。弊社のような第三者が間に入ることで、心理的ハードルを下げられます。」",
+            nextQuestion: "「一度、詳しい仕組みをお見せしながらご説明させていただけませんか？」",
+            steps: [
+                { label: "肯定する", text: "「おっしゃる通り、自社でフォローされることも可能です。」" },
+                { label: "学生視点を伝える", text: "「ただ、一度辞退した企業から直接連絡が来ると『気まずい』と感じる学生が多いのが実情です。」" },
+                { label: "第三者の価値", text: "「弊社のような第三者が間に入ることで、その心理的ハードルを下げ、スムーズに関係性を維持できます。」" },
+                { label: "具体提案", text: "「一度、詳しい仕組みをお見せしながらご説明させていただけませんか？」" }
+            ]
+        },
+        {
+            emoji: "💰",
+            category: "費用",
+            phrase: "「費用が気になります…」",
+            response: "「費用面は大切なポイントですよね。新たに求人広告を出すコストと比較すると、すでに御社に興味を持った方へのアプローチなので効率的です。」",
+            nextQuestion: "「料金体系は商談時に詳しくご説明させていただきます。まずは情報収集の場としてお時間いただけませんか？」",
+            steps: [
+                { label: "理解を示す", text: "「費用面は大切なポイントですよね。」" },
+                { label: "コスト比較", text: "「新たに求人広告を出して1から母集団を形成するコストと比較すると、すでに御社に興味を持った方へのアプローチなので効率的です。」" },
+                { label: "商談で詳しく", text: "「料金体系は商談時に詳しくご説明させていただきます。まずは情報収集の場としてお時間いただけませんか？」" }
+            ]
+        },
+        {
+            emoji: "📧",
+            category: "資料請求",
+            phrase: "「資料をメールで送ってください」",
+            response: "「かしこまりました。すぐにお送りいたします。的確な資料をお送りしたいのですが、直近の新卒採用で内定辞退は何名くらいいらっしゃいますか？」",
+            nextQuestion: "「資料をお送りした後、翌週あたりにお電話させていただいてもよろしいでしょうか？」",
+            steps: [
+                { label: "承諾する", text: "「かしこまりました。すぐにお送りいたします。」" },
+                { label: "ヒアリング", text: "「的確な資料をお送りしたいのですが、直近の新卒採用で内定辞退は何名くらいいらっしゃいますか？」" },
+                { label: "次のアクションを握る", text: "「資料をお送りした後、翌週あたりにお電話させていただいてもよろしいでしょうか？」" }
+            ]
+        },
+        {
+            emoji: "👔",
+            category: "担当不在",
+            phrase: "「担当者が不在です」",
+            response: "「承知いたしました。新卒採用のご担当者様のお名前を教えていただけますか？何時頃お戻りでしょうか？」",
+            nextQuestion: "「では改めてお電話させていただきます。内定辞退者の再アプローチに関するご提案でお電話した旨、お伝えいただけますと幸いです。」",
+            steps: [
+                { label: "確認する", text: "「承知いたしました。新卒採用のご担当者様のお名前を教えていただけますか？」" },
+                { label: "戻り時間を聞く", text: "「何時頃お戻りでしょうか？」" },
+                { label: "約束を取る", text: "「では改めてお電話させていただきます。」" },
+                { label: "伝言を依頼", text: "「内定辞退者の再アプローチに関するご提案でお電話した旨、お伝えいただけますと幸いです。」" }
+            ]
+        },
+        {
+            emoji: "🔒",
+            category: "個人情報",
+            phrase: "「個人情報が心配です」",
+            response: "「ご心配は当然です。弊社は厚生労働省からHRアワードを受賞しており、情報管理体制は非常にクリアです。学生様ご本人から許諾を得た上で進めます。」",
+            nextQuestion: "「セキュリティ体制について詳しくご説明もできますので、お打ち合わせのお時間をいただけませんか？」",
+            steps: [
+                { label: "共感する", text: "「個人情報の取り扱いについてご心配されるのは当然のことです。」" },
+                { label: "実績で安心感", text: "「弊社は厚生労働省からHRアワードを受賞しており、情報管理体制は非常にクリアです。」" },
+                { label: "許諾プロセス", text: "「学生様ご本人から『ミューズパスを利用すること』への許諾を得た上で進めますので、ご安心ください。」" },
+                { label: "詳細説明の提案", text: "「セキュリティ体制について詳しくご説明もできますので、お打ち合わせのお時間をいただけませんか？」" }
+            ]
+        },
+        {
+            emoji: "🤔",
+            category: "保留",
+            phrase: "「考えておきます」",
+            response: "「ありがとうございます。ちなみにどの部分が気になられましたか？内定辞退者の情報共有や個人情報の面でしょうか？」",
+            nextQuestion: "「まずは15分ほどの情報交換の場として、お話だけでもいかがでしょうか？」",
+            steps: [
+                { label: "具体化する", text: "「ありがとうございます。ちなみにどの部分が気になられましたか？」" },
+                { label: "不安を解消", text: "「内定辞退者の情報共有や個人情報の面でしょうか？」" },
+                { label: "ハードルを下げる", text: "「まずは15分ほどの情報交換の場として、お話だけでもいかがでしょうか？」" },
+                { label: "期限を設ける", text: "「では来週あたりに改めてお電話させていただいてもよろしいですか？」" }
+            ]
+        }
+    ];
+
+    let motivationQuotes = [
+        { quote: "100回断られても、101回目で決まる。その1回のために今日も架ける。", author: "トップセールスの格言" },
+        { quote: "電話の向こうにいるのは、あなたの助けを待っている人かもしれない。", author: "営業マインドセット" },
+        { quote: "アポが取れない日は、トークを磨いている日。無駄な日は1日もない。", author: "セールスコーチ" },
+        { quote: "最初の10秒で興味を引く。そのための準備を惜しまない。", author: "テレアポの鉄則" },
+        { quote: "断られることは失敗じゃない。次の成功への材料集め。", author: "成長マインドセット" },
+        { quote: "声のトーンは顔の表情。笑顔で話せば、相手にも伝わる。", author: "コミュニケーション研究" },
+        { quote: "数をこなす人が勝つ。質は量の中から生まれる。", author: "営業の原理原則" }
+    ];
+
+    let tips = [
+        { title: "ゴールデンタイムを狙え", body: "採用担当者がつかまりやすいのは10:00-11:30と14:00-16:00。この時間帯に集中して架電しよう。" },
+        { title: "最初の15秒が勝負", body: "名乗り→用件→メリットを15秒以内に。「内定辞退された学生さんと再びつながれるサービスのご案内でして…」と具体的に伝える。" },
+        { title: "「辞退者活用」は今トレンド", body: "アルムナイ採用は大手企業を中心に急速に広がっている。新卒版のアルムナイである点をアピールポイントにしよう。" },
+        { title: "相手の課題に共感する", body: "「内定辞退って本当にもったいないですよね」と共感から入ると、相手の心が開く。いきなりサービス説明をしない。" },
+        { title: "第三者介在の価値を伝える", body: "「学生さんは辞退した企業に気まずさを感じます」—この一言で、なぜ自社フォローだけでは難しいかが伝わる。" },
+        { title: "断られたら「ありがとう」", body: "「お忙しい中ありがとうございます」と感謝を伝えてから次のアプローチ。印象が残り、次回つながりやすくなる。" },
+        { title: "声に笑顔をのせる", body: "鏡を見ながら話すと自然と声のトーンが明るくなる。相手は声だけで判断するので、表情管理が重要。" },
+        { title: "No→Nextの思考", body: "断られたら「次！」と切り替える。1件1件に一喜一憂しない。10件中1件つながれば十分。" }
+    ];
+
+    const achievements = [
+        { icon: "📞", name: "ファーストコール", desc: "初めての架電記録", condition: r => r.totalCalls >= 1 },
+        { icon: "🔥", name: "10コール達成", desc: "1日10件以上架電", condition: r => r.maxDailyCalls >= 10 },
+        { icon: "⚡", name: "50コール達成", desc: "1日50件以上架電", condition: r => r.maxDailyCalls >= 50 },
+        { icon: "💯", name: "100コール突破", desc: "累計100件以上架電", condition: r => r.totalCalls >= 100 },
+        { icon: "🗣️", name: "初通話", desc: "初めてつながった！", condition: r => r.totalConnects >= 1 },
+        { icon: "🎯", name: "初アポ獲得！", desc: "初めてのアポイント", condition: r => r.totalAppointments >= 1 },
+        { icon: "🏆", name: "5アポ達成", desc: "累計5アポイント獲得", condition: r => r.totalAppointments >= 5 },
+        { icon: "📚", name: "学習者", desc: "Q&Aを10回以上閲覧", condition: r => r.qaViews >= 10 },
+        { icon: "🌟", name: "連続記録", desc: "3日連続で記録をつけた", condition: r => r.streak >= 3 },
+        { icon: "💎", name: "1週間継続", desc: "7日連続で記録をつけた", condition: r => r.streak >= 7 }
+    ];
+
+    // ===== MULTI-USER STATE =====
+    let currentUser = null;
+    let state = {};
+
+    function loadState() {
+        if (!currentUser) return { records: [], qaViews: 0, fontSize: 14 };
+        try {
+            const saved = localStorage.getItem('teleapo-user-' + currentUser);
+            if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return {
+            records: [],
+            qaViews: 0,
+            fontSize: 14
+        };
+    }
+
+    function saveState() {
+        if (!currentUser) return;
+        try { localStorage.setItem('teleapo-user-' + currentUser, JSON.stringify(state)); } catch(e) {}
+    }
+
+    function initCurrentUser() {
+        currentUser = localStorage.getItem('teleapo-currentUser');
+        if (currentUser) {
+            state = loadState();
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('current-user-name').textContent = currentUser;
+            renderUsersList();
+        } else {
+            document.getElementById('login-overlay').classList.remove('hidden');
+            renderUsersList();
+        }
+    }
+
+    function handleLogin() {
+        const input = document.getElementById('login-input');
+        const username = input.value.trim();
+        if (!username) {
+            alert('名前を入力してください');
+            return;
+        }
+        loginUser(username);
+    }
+
+    function loginUser(username) {
+        currentUser = username;
+        localStorage.setItem('teleapo-currentUser', username);
+
+        // Register user in users list
+        try {
+            let users = JSON.parse(localStorage.getItem('teleapo-users') || '[]');
+            if (!users.includes(username)) {
+                users.push(username);
+                localStorage.setItem('teleapo-users', JSON.stringify(users));
+            }
+        } catch(e) {}
+
+        state = loadState();
+        state.fontSize = state.fontSize || 14;
+
+        document.getElementById('login-overlay').classList.add('hidden');
+        document.getElementById('current-user-name').textContent = currentUser;
+        document.getElementById('login-input').value = '';
+
+        renderUsersList();
+        renderDashboard();
+        renderTeam();
+        renderComments();
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('teleapo-currentUser');
+        currentUser = null;
+        state = {};
+        document.getElementById('login-overlay').classList.remove('hidden');
+        document.getElementById('login-input').value = '';
+        renderUsersList();
+    }
+
+    function renderUsersList() {
+        try {
+            let users = JSON.parse(localStorage.getItem('teleapo-users') || '[]');
+            const listEl = document.getElementById('recent-users');
+            const containerEl = document.getElementById('login-users-list');
+
+            if (users.length > 0) {
+                listEl.innerHTML = '';
+                users.forEach(u => {
+                    const btn = document.createElement('button');
+                    btn.className = 'login-user-btn';
+                    btn.textContent = u;
+                    btn.addEventListener('click', () => loginUser(u));
+                    listEl.appendChild(btn);
+                });
+                containerEl.style.display = 'block';
+            } else {
+                containerEl.style.display = 'none';
+            }
+        } catch(e) {}
+    }
+
+    // ===== THEME =====
+    function toggleTheme() {
+        const body = document.body;
+        const isDark = body.getAttribute('data-theme') === 'dark';
+        body.setAttribute('data-theme', isDark ? '' : 'dark');
+        document.querySelector('.theme-toggle').textContent = isDark ? '🌙' : '☀️';
+    }
+
+    function changeFontSize(delta) {
+        state.fontSize = Math.max(12, Math.min(20, state.fontSize + delta));
+        document.body.style.fontSize = state.fontSize + 'px';
+        saveState();
+    }
+
+    // ===== TABS =====
+    function switchTab(tab, el) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        if (el) el.classList.add('active');
+    }
+
+    // ===== Q&A =====
+    const categorySet = [...new Set(qaData.map(q => q.category))];
+    let activeCategory = 'all';
+
+    function renderCategories() {
+        const el = document.getElementById('qa-categories');
+        el.innerHTML = `<div class="category-chip ${activeCategory === 'all' ? 'active' : ''}" onclick="setCategory('all')">すべて</div>` +
+            categorySet.map(c => `<div class="category-chip ${activeCategory === c ? 'active' : ''}" onclick="setCategory('${c}')">${c}</div>`).join('');
+    }
+
+    function setCategory(cat) {
+        activeCategory = cat;
+        renderCategories();
+        filterQA();
+    }
+
+    function filterQA() {
+        const query = document.getElementById('qa-search').value.toLowerCase();
+        const filtered = qaData.filter(q => {
+            const matchCat = activeCategory === 'all' || q.category === activeCategory;
+            const matchQuery = !query || q.question.toLowerCase().includes(query) ||
+                q.points.some(p => p.toLowerCase().includes(query)) ||
+                q.script.toLowerCase().includes(query) ||
+                q.category.toLowerCase().includes(query);
+            return matchCat && matchQuery;
+        });
+        renderQA(filtered);
+    }
+
+    function renderQA(data) {
+        const el = document.getElementById('qa-list');
+        if (data.length === 0) {
+            el.innerHTML = `<div class="empty-state"><div class="emoji">🔍</div><p>該当するQ&Aが見つかりません</p></div>`;
+            return;
+        }
+        el.innerHTML = data.map((q, i) => `
+            <div class="qa-card" onclick="toggleQA(this, ${i})">
+                <div class="qa-question">
+                    <span class="badge badge-${q.badge}">${q.category}</span>
+                    <span>${q.question}</span>
+                    <span class="qa-toggle">▼</span>
+                </div>
+                <div class="qa-answer">
+                    <div class="answer-section">
+                        <div class="answer-label">📌 回答ポイント</div>
+                        <ul class="answer-points">
+                            ${q.points.map(p => `<li>${p}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="script-box">
+                        <div class="script-label">🎤 そのまま使えるスクリプト</div>
+                        ${q.script}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function toggleQA(el, idx) {
+        el.classList.toggle('open');
+        if (el.classList.contains('open')) {
+            state.qaViews = (state.qaViews || 0) + 1;
+            saveState();
+        }
+    }
+
+    // ===== DIG DEEPER =====
+    const digPhases = [...new Set(digData.map(d => d.phase))];
+    let activeDigPhase = 'all';
+
+    function renderDigCategories() {
+        const el = document.getElementById('dig-categories');
+        el.innerHTML = `<div class="category-chip ${activeDigPhase === 'all' ? 'active' : ''}" onclick="setDigPhase('all')">全ステップ</div>` +
+            digPhases.map(p => `<div class="category-chip ${activeDigPhase === p ? 'active' : ''}" onclick="setDigPhase('${p}')">${p}</div>`).join('');
+    }
+
+    function setDigPhase(phase) {
+        activeDigPhase = phase;
+        renderDigCategories();
+        renderDig();
+    }
+
+    function renderDig() {
+        const el = document.getElementById('dig-list');
+        const filtered = activeDigPhase === 'all' ? digData : digData.filter(d => d.phase === activeDigPhase);
+
+        let html = '';
+        let currentPhase = '';
+
+        filtered.forEach((d, i) => {
+            if (activeDigPhase === 'all' && d.phase !== currentPhase) {
+                currentPhase = d.phase;
+                html += `<div class="phase-header">${d.phase}</div>`;
+            }
+            html += `
+                <div class="dig-card" onclick="this.classList.toggle('open')">
+                    <div class="dig-header">
+                        <span class="dig-emoji">${d.emoji}</span>
+                        <span class="dig-question">「${d.question}」</span>
+                        <span class="qa-toggle">▼</span>
+                    </div>
+                    <div class="dig-body">
+                        <div class="dig-meta">
+                            <div class="dig-meta-item purpose">
+                                <div class="dig-meta-label">🎯 この質問の狙い</div>
+                                ${d.purpose}
+                            </div>
+                            <div class="dig-meta-item followup">
+                                <div class="dig-meta-label">💬 相手の回答への返し</div>
+                                ${d.followUp}
+                            </div>
+                            <div class="dig-meta-item timing">
+                                <div class="dig-meta-label">⏰ 使うタイミング</div>
+                                ${d.timing}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        el.innerHTML = html;
+    }
+
+    // ===== OBJECTIONS =====
+    let callModeOn = false;
+
+    function renderObjections() {
+        const el = document.getElementById('objection-list');
+        el.innerHTML = objectionData.map((o, i) => `
+            <div class="objection-card" onclick="this.classList.toggle('open')">
+                <div class="objection-header">
+                    <span class="objection-emoji">${o.emoji}</span>
+                    <span>${escapeHTML(o.phrase)}</span>
+                    <span class="qa-toggle" style="margin-left:auto">▼</span>
+                </div>
+                <div class="objection-body">
+                    ${o.steps.map((s, j) => `
+                        <div class="response-step">
+                            <div class="step-num">${j + 1}</div>
+                            <div class="step-content"><strong>${escapeHTML(s.label)}：</strong>${escapeHTML(s.text)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+
+        renderCallModeButtons();
+    }
+
+    function toggleCallMode() {
+        callModeOn = !callModeOn;
+        const btn = document.getElementById('call-mode-toggle');
+        const normalList = document.getElementById('objection-list');
+        const callMode = document.getElementById('call-mode');
+        const desc = document.getElementById('objection-desc');
+
+        if (callModeOn) {
+            btn.textContent = '📖 通常モードに戻す';
+            btn.style.background = 'var(--danger)';
+            normalList.style.display = 'none';
+            callMode.style.display = 'block';
+            desc.textContent = '通話中モード：大きなボタンをタップして、即座に切り返しフレーズを確認できます。';
+        } else {
+            btn.textContent = '📞 通話中モード ON';
+            btn.style.background = '';
+            normalList.style.display = '';
+            callMode.style.display = 'none';
+            desc.textContent = '断られたときの対応フレーズ集です。落ち着いて、まず共感してから切り返しましょう。';
+            document.getElementById('call-mode-response').style.display = 'none';
+        }
+    }
+
+    function renderCallModeButtons() {
+        const el = document.getElementById('call-mode-buttons');
+        el.innerHTML = objectionData.map((o, i) => `
+            <button onclick="showCallResponse(${i})" style="
+                padding:20px 16px; font-size:18px; border-radius:var(--radius);
+                border:2px solid var(--border); background:var(--card); color:var(--text);
+                cursor:pointer; text-align:center; transition:all 0.2s;
+                min-height:80px; display:flex; align-items:center; justify-content:center; gap:8px;
+            " onmouseover="this.style.borderColor='var(--primary)';this.style.background='var(--primary-light)'"
+               onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--card)'">
+                <span style="font-size:24px;">${o.emoji}</span>
+                <span>${escapeHTML(o.category)}</span>
+            </button>
+        `).join('');
+    }
+
+    function showCallResponse(idx) {
+        const o = objectionData[idx];
+        const respDiv = document.getElementById('call-mode-response');
+        respDiv.style.display = 'block';
+
+        document.getElementById('call-mode-title').textContent = o.emoji + ' ' + o.phrase;
+
+        const stepsEl = document.getElementById('call-mode-steps');
+        stepsEl.innerHTML = '';
+        const responseP = document.createElement('div');
+        responseP.style.cssText = 'font-size:17px; line-height:1.8; margin-bottom:8px;';
+        responseP.textContent = o.response;
+        stepsEl.appendChild(responseP);
+
+        const nextEl = document.getElementById('call-mode-next');
+        nextEl.innerHTML = '';
+        const nextLabel = document.createElement('div');
+        nextLabel.style.cssText = 'font-size:13px; font-weight:600; color:var(--primary); margin-bottom:4px;';
+        nextLabel.textContent = '➡️ 次の質問：';
+        const nextText = document.createElement('div');
+        nextText.style.cssText = 'font-size:16px; line-height:1.6;';
+        nextText.textContent = o.nextQuestion;
+        nextEl.appendChild(nextLabel);
+        nextEl.appendChild(nextText);
+
+        respDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function closeCallResponse() {
+        document.getElementById('call-mode-response').style.display = 'none';
+    }
+
+    // ===== GROWTH SUPPORT =====
+    function getNextAction(stats) {
+        const connectRate = stats.totalCalls ? (stats.totalConnects / stats.totalCalls) * 100 : 0;
+        const apoRate = stats.totalConnects ? (stats.totalAppointments / stats.totalConnects) * 100 : 0;
+
+        // 記録がない場合
+        if (stats.days === 0) {
+            return "まずは今日の架電結果を記録してみましょう！記録を続けることで、自分の成長が見えるようになります。";
+        }
+
+        // 優先度順に改善提案を出す
+        if (stats.streak < 3) {
+            return "毎日の記録を習慣にしましょう！3日連続で記録をつけると、自分の傾向が見えてきます。現在 " + stats.streak + "日連続です。";
+        }
+
+        if (stats.totalCalls < 50) {
+            return "まずは架電数を増やしましょう！目標は累計50件。現在 " + stats.totalCalls + "件です。量をこなすことで質が上がります。";
+        }
+
+        if (connectRate < 15) {
+            return "接続率が " + connectRate.toFixed(1) + "% です。ゴールデンタイム（10:00-11:30、14:00-16:00）に架電を集中させてみましょう。";
+        }
+
+        if (apoRate < 10) {
+            return "アポ率が " + apoRate.toFixed(1) + "% です。「切り返しトーク集」を通話前に確認して、反論への準備を強化しましょう。";
+        }
+
+        if (stats.qaViews < 10) {
+            return "Q&Aセクションをもっと活用しましょう！（現在 " + stats.qaViews + "回閲覧）スクリプトを事前に読み込むことで、通話の質が上がります。";
+        }
+
+        if (connectRate >= 15 && apoRate >= 10) {
+            return "素晴らしい成績です！次のステップとして、深掘り質問を活用してヒアリングの質をさらに高めてみましょう。";
+        }
+
+        return "今日も1件1件丁寧に架電しましょう。継続は力なりです！";
+    }
+
+    // ===== DASHBOARD =====
+    function getStats() {
+        const records = state.records || [];
+        const totalCalls = records.reduce((s, r) => s + (r.calls || 0), 0);
+        const totalConnects = records.reduce((s, r) => s + (r.connects || 0), 0);
+        const totalAppointments = records.reduce((s, r) => s + (r.appointments || 0), 0);
+        const maxDailyCalls = records.length ? Math.max(...records.map(r => r.calls || 0)) : 0;
+
+        let streak = 0;
+        if (records.length) {
+            const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+            streak = 1;
+            for (let i = 1; i < sorted.length; i++) {
+                const d1 = new Date(sorted[i-1].date);
+                const d2 = new Date(sorted[i].date);
+                const diff = (d1 - d2) / (1000 * 60 * 60 * 24);
+                if (diff <= 1.5) streak++;
+                else break;
+            }
+        }
+
+        return { totalCalls, totalConnects, totalAppointments, maxDailyCalls, qaViews: state.qaViews || 0, streak, days: records.length };
+    }
+
+    function renderDashboard() {
+        const stats = getStats();
+        const connectRate = stats.totalCalls ? ((stats.totalConnects / stats.totalCalls) * 100).toFixed(1) : '0.0';
+        const apoRate = stats.totalConnects ? ((stats.totalAppointments / stats.totalConnects) * 100).toFixed(1) : '0.0';
+
+        // 今日の改善ポイント表示
+        const nextActionCard = document.getElementById('next-action-card');
+        const nextActionText = document.getElementById('next-action-text');
+        const action = getNextAction(stats);
+        nextActionText.textContent = action;
+        nextActionCard.style.display = 'block';
+
+        document.getElementById('stats-grid').innerHTML = `
+            <div class="stat-card"><div class="stat-icon">📞</div><div class="stat-number">${stats.totalCalls}</div><div class="stat-label">累計架電数</div></div>
+            <div class="stat-card"><div class="stat-icon">🗣️</div><div class="stat-number">${stats.totalConnects}</div><div class="stat-label">累計通話数</div></div>
+            <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-number">${stats.totalAppointments}</div><div class="stat-label">累計アポ数</div></div>
+            <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-number">${connectRate}%</div><div class="stat-label">接続率</div></div>
+            <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-number">${apoRate}%</div><div class="stat-label">アポ率</div></div>
+            <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-number">${stats.streak}日</div><div class="stat-label">連続記録</div></div>
+        `;
+
+        // History
+        const histEl = document.getElementById('history-list');
+        const records = (state.records || []).slice().reverse();
+        if (records.length === 0) {
+            histEl.innerHTML = `<div class="empty-state"><div class="emoji">📝</div><p>まだ記録がありません。今日の結果を入力してみましょう！</p></div>`;
+        } else {
+            histEl.innerHTML = records.map(r => `
+                <div class="history-entry">
+                    <div class="history-date">${r.date}</div>
+                    <div class="history-stats">
+                        <span>📞 <span class="history-stat-val">${r.calls}</span></span>
+                        <span>🗣️ <span class="history-stat-val">${r.connects}</span></span>
+                        <span>🎯 <span class="history-stat-val">${r.appointments}</span></span>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    function saveRecord() {
+        const calls = parseInt(document.getElementById('input-calls').value) || 0;
+        const connects = parseInt(document.getElementById('input-connects').value) || 0;
+        const appointments = parseInt(document.getElementById('input-appointments').value) || 0;
+        const memo = document.getElementById('input-memo').value;
+
+        if (calls === 0 && connects === 0 && appointments === 0) {
+            alert('少なくとも1つの項目を入力してください');
+            return;
+        }
+
+        const today = new Date().toLocaleDateString('ja-JP');
+        const existingIdx = state.records.findIndex(r => r.date === today);
+
+        const record = { date: today, calls, connects, appointments, memo };
+
+        if (existingIdx >= 0) {
+            state.records[existingIdx] = record;
+        } else {
+            state.records.push(record);
+        }
+
+        saveState();
+        renderDashboard();
+        renderTeam();
+
+        // Reset form
+        document.getElementById('input-calls').value = 0;
+        document.getElementById('input-connects').value = 0;
+        document.getElementById('input-appointments').value = 0;
+
+        document.getElementById('input-memo').value = '';
+
+        alert('記録を保存しました！ 💪');
+    }
+
+    // ===== MOTIVATION =====
+    function renderMotivation() {
+        const today = new Date();
+        const idx = today.getDate() % motivationQuotes.length;
+        const q = motivationQuotes[idx];
+
+        document.getElementById('daily-quote').innerHTML = `
+            <div style="font-size:14px; opacity:0.85; margin-bottom:12px;">📅 今日の一言</div>
+            <div class="quote">「${q.quote}」</div>
+            <div class="author">— ${q.author}</div>
+        `;
+
+        document.getElementById('tips-list').innerHTML = tips.map(t => `
+            <div class="tip-card">
+                <div class="tip-title">💡 ${t.title}</div>
+                <div class="tip-body">${t.body}</div>
+            </div>
+        `).join('');
+    }
+
+    // ===== TEAM DASHBOARD =====
+    function renderTeam() {
+        try {
+            let users = JSON.parse(localStorage.getItem('teleapo-users') || '[]');
+            if (users.length === 0) {
+                document.getElementById('team-tbody').innerHTML = `
+                    <tr><td colspan="6" style="text-align:center; padding:40px 20px;">
+                        <div class="empty-state">
+                            <div class="emoji">👥</div>
+                            <p>チームメンバーがまだいません。ログインしたユーザーがここに表示されます。</p>
+                        </div>
+                    </td></tr>
+                `;
+                return;
+            }
+
+            let teamStats = [];
+            let totals = { calls: 0, connects: 0, appointments: 0 };
+
+            // Aggregate stats for all users
+            users.forEach(user => {
+                try {
+                    let userData = JSON.parse(localStorage.getItem('teleapo-user-' + user) || '{}');
+                    let records = userData.records || [];
+                    let totalCalls = records.reduce((sum, r) => sum + (r.calls || 0), 0);
+                    let totalConnects = records.reduce((sum, r) => sum + (r.connects || 0), 0);
+                    let totalAppointments = records.reduce((sum, r) => sum + (r.appointments || 0), 0);
+
+                    let connectRate = totalCalls > 0 ? ((totalConnects / totalCalls) * 100).toFixed(1) : 0;
+                    let appointmentRate = totalConnects > 0 ? ((totalAppointments / totalConnects) * 100).toFixed(1) : 0;
+
+                    teamStats.push({
+                        name: user,
+                        calls: totalCalls,
+                        connects: totalConnects,
+                        appointments: totalAppointments,
+                        connectRate: connectRate,
+                        appointmentRate: appointmentRate
+                    });
+
+                    totals.calls += totalCalls;
+                    totals.connects += totalConnects;
+                    totals.appointments += totalAppointments;
+                } catch(e) {}
+            });
+
+            // Sort by appointment rate descending
+            teamStats.sort((a, b) => b.appointmentRate - a.appointmentRate);
+
+            // Render table rows
+            let html = teamStats.map(stat => {
+                let isCurrentUser = stat.name === currentUser ? ' current-user' : '';
+                return `<tr class="${isCurrentUser}">
+                    <td><strong>${stat.name}</strong></td>
+                    <td>${stat.calls}</td>
+                    <td>${stat.connects}</td>
+                    <td>${stat.appointments}</td>
+                    <td>${stat.connectRate}%</td>
+                    <td>${stat.appointmentRate}%</td>
+                </tr>`;
+            }).join('');
+
+            // Add summary row
+            let totalConnectRate = totals.calls > 0 ? ((totals.connects / totals.calls) * 100).toFixed(1) : 0;
+            let totalAppointmentRate = totals.connects > 0 ? ((totals.appointments / totals.connects) * 100).toFixed(1) : 0;
+
+            html += `<tr class="summary">
+                <td>🎯 チーム合計</td>
+                <td>${totals.calls}</td>
+                <td>${totals.connects}</td>
+                <td>${totals.appointments}</td>
+                <td>${totalConnectRate}%</td>
+                <td>${totalAppointmentRate}%</td>
+            </tr>`;
+
+            document.getElementById('team-tbody').innerHTML = html;
+        } catch(e) {
+            console.error('Error rendering team:', e);
+        }
+    }
+
+    // ===== COMMENTS =====
+    let activeCommentFilter = 'all';
+
+    function submitComment() {
+        if (!currentUser) {
+            alert('ログインしてください');
+            return;
+        }
+
+        const category = document.getElementById('comment-category').value;
+        const text = document.getElementById('comment-text').value.trim();
+
+        if (!text) {
+            alert('コメントを入力してください');
+            return;
+        }
+
+        try {
+            let comments = JSON.parse(localStorage.getItem('teleapo-comments') || '[]');
+
+            comments.push({
+                author: currentUser,
+                category: category,
+                text: text,
+                timestamp: new Date().toISOString()
+            });
+
+            localStorage.setItem('teleapo-comments', JSON.stringify(comments));
+            document.getElementById('comment-text').value = '';
+            document.getElementById('comment-category').value = '改善提案';
+
+            renderComments();
+        } catch(e) {
+            console.error('Error submitting comment:', e);
+        }
+    }
+
+    function filterComments(category, el) {
+        activeCommentFilter = category;
+        document.querySelectorAll('.comment-filter-chip').forEach(chip => {
+            chip.classList.remove('active');
+        });
+        if (el) el.classList.add('active');
+        renderComments();
+    }
+
+    function escapeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function renderComments() {
+        try {
+            let comments = JSON.parse(localStorage.getItem('teleapo-comments') || '[]');
+
+            // Filter by category
+            if (activeCommentFilter !== 'all') {
+                comments = comments.filter(c => c.category === activeCommentFilter);
+            }
+
+            // Sort by newest first
+            comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            const el = document.getElementById('comments-list');
+            el.innerHTML = '';
+
+            if (comments.length === 0) {
+                el.innerHTML = '<div class="empty-state"><div class="emoji">💬</div><p>まだコメントはありません。最初のコメントを投稿してみてください！</p></div>';
+                return;
+            }
+
+            comments.forEach(c => {
+                const date = new Date(c.timestamp);
+                const timeStr = date.toLocaleDateString('ja-JP') + ' ' + date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+
+                const card = document.createElement('div');
+                card.className = 'comment-card';
+
+                const header = document.createElement('div');
+                header.className = 'comment-header';
+                const headerInner = document.createElement('div');
+                const authorSpan = document.createElement('span');
+                authorSpan.className = 'comment-author';
+                authorSpan.textContent = c.author;
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'comment-time';
+                timeSpan.textContent = timeStr;
+                headerInner.appendChild(authorSpan);
+                headerInner.appendChild(timeSpan);
+                header.appendChild(headerInner);
+
+                const catDiv = document.createElement('div');
+                catDiv.className = 'comment-category';
+                catDiv.textContent = c.category;
+
+                const textDiv = document.createElement('div');
+                textDiv.className = 'comment-text';
+                // Safely handle newlines without innerHTML
+                c.text.split('\n').forEach((line, i, arr) => {
+                    textDiv.appendChild(document.createTextNode(line));
+                    if (i < arr.length - 1) textDiv.appendChild(document.createElement('br'));
+                });
+
+                card.appendChild(header);
+                card.appendChild(catDiv);
+                card.appendChild(textDiv);
+                el.appendChild(card);
+            });
+        } catch(e) {
+            console.error('Error rendering comments:', e);
+        }
+    }
+
+    // ===== 外部JSONデータ読み込み =====
+    async function loadExternalData() {
+        const files = {
+            qaData: 'data/qaData.json',
+            digData: 'data/digData.json',
+            objectionData: 'data/objectionData.json',
+            motivationQuotes: 'data/motivationQuotes.json',
+            tips: 'data/tips.json'
+        };
+        for (const [key, path] of Object.entries(files)) {
+            try {
+                const res = await fetch(path);
+                if (res.ok) {
+                    const data = await res.json();
+                    switch(key) {
+                        case 'qaData': qaData = data; break;
+                        case 'digData': digData = data; break;
+                        case 'objectionData': objectionData = data; break;
+                        case 'motivationQuotes': motivationQuotes = data; break;
+                        case 'tips': tips = data; break;
+                    }
+                    console.log(key + ' を外部JSONから読み込みました');
+                }
+            } catch(e) {
+                console.warn(key + ' の外部読み込みに失敗。インラインデータを使用します。');
+            }
+        }
+    }
+
+    // ===== INIT =====
+    (async function init() {
+        // 外部JSONの読み込みを試行（失敗してもインラインデータで動作）
+        await loadExternalData();
+
+        initCurrentUser();
+        document.body.style.fontSize = (state.fontSize || 14) + 'px';
+        renderCategories();
+        filterQA();
+        renderDigCategories();
+        renderDig();
+        renderObjections();
+        renderDashboard();
+        renderTeam();
+        renderComments();
+        renderMotivation();
+    })();
+    </script>
+</body>
+</html>
