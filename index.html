@@ -1002,6 +1002,9 @@
         <div class="nav-item" onclick="switchTab('objection', this)">
             <span class="nav-icon">🛡️</span>切り返し
         </div>
+        <div class="nav-item" onclick="switchTab('scripts', this)">
+            <span class="nav-icon">📝</span>スクリプト
+        </div>
         <div class="nav-item" onclick="switchTab('dashboard', this)">
             <span class="nav-icon">📊</span>成長記録
         </div>
@@ -1060,6 +1063,62 @@
                     <div id="call-mode-next" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);"></div>
                 </div>
             </div>
+        </div>
+
+        <!-- Scripts Tab -->
+        <div id="tab-scripts" class="tab-content">
+            <h2 style="margin-bottom:8px; font-size:18px;">📝 みんなのトークスクリプト</h2>
+            <p style="margin-bottom:20px; color:var(--text-secondary); font-size:14px;">自分のトーク術・成功パターンを共有しよう！チーム全体のレベルアップにつながります。</p>
+
+            <!-- Script Post Form -->
+            <div class="script-post-form" style="background:var(--card); border-radius:var(--radius); padding:20px; margin-bottom:24px; box-shadow:var(--shadow);">
+                <h3 style="margin-bottom:14px; font-size:16px;">✍️ スクリプトを投稿</h3>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:var(--text-secondary);">タイトル</label>
+                    <input type="text" id="script-title" placeholder="例：受付突破の鉄板フレーズ" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg); color:var(--text);">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:var(--text-secondary);">カテゴリ</label>
+                    <select id="script-category" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg); color:var(--text);">
+                        <option value="受付突破">受付突破</option>
+                        <option value="初回トーク">初回トーク</option>
+                        <option value="ヒアリング">ヒアリング</option>
+                        <option value="クロージング">クロージング</option>
+                        <option value="切り返し">切り返し</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:var(--text-secondary);">場面・状況</label>
+                    <input type="text" id="script-situation" placeholder="例：人事担当につないでもらう前の受付対応" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg); color:var(--text);">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:var(--text-secondary);">トークスクリプト（セリフ）</label>
+                    <textarea id="script-body" rows="5" placeholder="実際に使っているセリフをそのまま書いてください。&#10;&#10;例：&#10;「お世話になります。○○の△△と申します。&#10;新卒採用のご担当者様はいらっしゃいますか？&#10;内定辞退者の再活用について、3分だけお時間いただけますか？」" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg); color:var(--text); resize:vertical; line-height:1.6;"></textarea>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:var(--text-secondary);">ポイント・コツ（任意）</label>
+                    <textarea id="script-tips" rows="2" placeholder="このスクリプトを使うときのコツ、声のトーン、間の取り方など" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg); color:var(--text); resize:vertical; line-height:1.6;"></textarea>
+                </div>
+                <button onclick="submitScript()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer;">投稿する 📝</button>
+            </div>
+
+            <!-- Script Filters -->
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+                <div class="category-chip active" onclick="filterScripts('all', this)">すべて</div>
+                <div class="category-chip" onclick="filterScripts('受付突破', this)">受付突破</div>
+                <div class="category-chip" onclick="filterScripts('初回トーク', this)">初回トーク</div>
+                <div class="category-chip" onclick="filterScripts('ヒアリング', this)">ヒアリング</div>
+                <div class="category-chip" onclick="filterScripts('クロージング', this)">クロージング</div>
+                <div class="category-chip" onclick="filterScripts('切り返し', this)">切り返し</div>
+                <div class="category-chip" onclick="filterScripts('その他', this)">その他</div>
+            </div>
+
+            <!-- Script Search -->
+            <input type="text" id="script-search" placeholder="🔍 スクリプトを検索..." oninput="renderScripts()" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; font-size:14px; background:var(--card); color:var(--text);">
+
+            <!-- Scripts List -->
+            <div id="scripts-list"></div>
         </div>
 
         <!-- Dashboard Tab -->
@@ -1615,6 +1674,7 @@
         renderUsersList();
         renderDashboard();
         renderTeam();
+        renderScripts();
         renderComments();
     }
 
@@ -2140,6 +2200,241 @@
         }
     }
 
+    // ===== SCRIPTS (トークスクリプト共有) =====
+    let activeScriptFilter = 'all';
+
+    function submitScript() {
+        if (!currentUser) {
+            alert('ログインしてください');
+            return;
+        }
+
+        const title = document.getElementById('script-title').value.trim();
+        const category = document.getElementById('script-category').value;
+        const situation = document.getElementById('script-situation').value.trim();
+        const body = document.getElementById('script-body').value.trim();
+        const tips = document.getElementById('script-tips').value.trim();
+
+        if (!title) { alert('タイトルを入力してください'); return; }
+        if (!body) { alert('トークスクリプトを入力してください'); return; }
+
+        try {
+            let scripts = JSON.parse(localStorage.getItem('teleapo-scripts') || '[]');
+
+            scripts.push({
+                id: Date.now(),
+                author: currentUser,
+                title: title,
+                category: category,
+                situation: situation,
+                body: body,
+                tips: tips,
+                likes: [],
+                timestamp: new Date().toISOString()
+            });
+
+            localStorage.setItem('teleapo-scripts', JSON.stringify(scripts));
+
+            // Reset form
+            document.getElementById('script-title').value = '';
+            document.getElementById('script-category').value = '受付突破';
+            document.getElementById('script-situation').value = '';
+            document.getElementById('script-body').value = '';
+            document.getElementById('script-tips').value = '';
+
+            renderScripts();
+            alert('スクリプトを投稿しました！ 📝');
+        } catch(e) {
+            console.error('Error submitting script:', e);
+        }
+    }
+
+    function filterScripts(category, el) {
+        activeScriptFilter = category;
+        // Update active chip
+        const chips = el.parentElement.querySelectorAll('.category-chip');
+        chips.forEach(c => c.classList.remove('active'));
+        if (el) el.classList.add('active');
+        renderScripts();
+    }
+
+    function toggleLikeScript(id) {
+        if (!currentUser) return;
+        try {
+            let scripts = JSON.parse(localStorage.getItem('teleapo-scripts') || '[]');
+            const script = scripts.find(s => s.id === id);
+            if (!script) return;
+
+            if (!script.likes) script.likes = [];
+            const idx = script.likes.indexOf(currentUser);
+            if (idx >= 0) {
+                script.likes.splice(idx, 1);
+            } else {
+                script.likes.push(currentUser);
+            }
+
+            localStorage.setItem('teleapo-scripts', JSON.stringify(scripts));
+            renderScripts();
+        } catch(e) {
+            console.error('Error toggling like:', e);
+        }
+    }
+
+    function deleteScript(id) {
+        if (!confirm('このスクリプトを削除しますか？')) return;
+        try {
+            let scripts = JSON.parse(localStorage.getItem('teleapo-scripts') || '[]');
+            scripts = scripts.filter(s => s.id !== id || s.author !== currentUser);
+            localStorage.setItem('teleapo-scripts', JSON.stringify(scripts));
+            renderScripts();
+        } catch(e) {
+            console.error('Error deleting script:', e);
+        }
+    }
+
+    function renderScripts() {
+        try {
+            let scripts = JSON.parse(localStorage.getItem('teleapo-scripts') || '[]');
+            const searchQuery = (document.getElementById('script-search')?.value || '').toLowerCase();
+
+            // Filter
+            if (activeScriptFilter !== 'all') {
+                scripts = scripts.filter(s => s.category === activeScriptFilter);
+            }
+            if (searchQuery) {
+                scripts = scripts.filter(s =>
+                    s.title.toLowerCase().includes(searchQuery) ||
+                    s.body.toLowerCase().includes(searchQuery) ||
+                    s.situation.toLowerCase().includes(searchQuery) ||
+                    s.author.toLowerCase().includes(searchQuery) ||
+                    (s.tips && s.tips.toLowerCase().includes(searchQuery))
+                );
+            }
+
+            // Sort newest first
+            scripts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            const el = document.getElementById('scripts-list');
+            if (!el) return;
+            el.innerHTML = '';
+
+            if (scripts.length === 0) {
+                el.innerHTML = '<div class="empty-state"><div class="emoji">📝</div><p>まだスクリプトがありません。あなたの得意トークを最初に共有してみましょう！</p></div>';
+                return;
+            }
+
+            scripts.forEach(s => {
+                const date = new Date(s.timestamp);
+                const timeStr = date.toLocaleDateString('ja-JP') + ' ' + date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                const likeCount = (s.likes || []).length;
+                const isLiked = (s.likes || []).includes(currentUser);
+                const isOwner = s.author === currentUser;
+
+                const card = document.createElement('div');
+                card.className = 'script-card';
+                card.style.cssText = 'background:var(--card); border-radius:var(--radius); padding:20px; margin-bottom:14px; box-shadow:var(--shadow); border-left:4px solid var(--primary);';
+
+                // Header
+                const header = document.createElement('div');
+                header.style.cssText = 'display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;';
+
+                const titleDiv = document.createElement('div');
+                titleDiv.style.cssText = 'flex:1;';
+
+                const titleEl = document.createElement('h3');
+                titleEl.style.cssText = 'font-size:16px; margin-bottom:4px;';
+                titleEl.textContent = s.title;
+
+                const metaEl = document.createElement('div');
+                metaEl.style.cssText = 'font-size:12px; color:var(--text-secondary); display:flex; gap:10px; flex-wrap:wrap;';
+
+                const authorSpan = document.createElement('span');
+                authorSpan.textContent = '👤 ' + s.author;
+                const timeSpan = document.createElement('span');
+                timeSpan.textContent = '📅 ' + timeStr;
+                const catSpan = document.createElement('span');
+                catSpan.style.cssText = 'background:var(--primary-light); color:var(--primary); padding:1px 8px; border-radius:10px; font-weight:600;';
+                catSpan.textContent = s.category;
+
+                metaEl.appendChild(authorSpan);
+                metaEl.appendChild(timeSpan);
+                metaEl.appendChild(catSpan);
+                titleDiv.appendChild(titleEl);
+                titleDiv.appendChild(metaEl);
+                header.appendChild(titleDiv);
+
+                // Delete button (owner only)
+                if (isOwner) {
+                    const delBtn = document.createElement('button');
+                    delBtn.textContent = '🗑️';
+                    delBtn.title = '削除';
+                    delBtn.style.cssText = 'background:none; border:none; font-size:16px; cursor:pointer; opacity:0.5; padding:4px;';
+                    delBtn.addEventListener('click', () => deleteScript(s.id));
+                    header.appendChild(delBtn);
+                }
+
+                card.appendChild(header);
+
+                // Situation
+                if (s.situation) {
+                    const sitDiv = document.createElement('div');
+                    sitDiv.style.cssText = 'background:var(--bg); border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:13px;';
+                    const sitLabel = document.createElement('span');
+                    sitLabel.style.cssText = 'font-weight:600; color:var(--text-secondary);';
+                    sitLabel.textContent = '🎬 場面：';
+                    const sitText = document.createElement('span');
+                    sitText.textContent = s.situation;
+                    sitDiv.appendChild(sitLabel);
+                    sitDiv.appendChild(sitText);
+                    card.appendChild(sitDiv);
+                }
+
+                // Script Body
+                const bodyDiv = document.createElement('div');
+                bodyDiv.style.cssText = 'background:var(--primary-light); border-radius:8px; padding:14px 16px; margin-bottom:12px; font-size:14px; line-height:1.8; white-space:pre-wrap; border:1px solid var(--border);';
+                const bodyLabel = document.createElement('div');
+                bodyLabel.style.cssText = 'font-size:12px; font-weight:600; color:var(--primary); margin-bottom:6px;';
+                bodyLabel.textContent = '🎤 スクリプト';
+                bodyDiv.appendChild(bodyLabel);
+
+                s.body.split('\n').forEach((line, i, arr) => {
+                    bodyDiv.appendChild(document.createTextNode(line));
+                    if (i < arr.length - 1) bodyDiv.appendChild(document.createElement('br'));
+                });
+                card.appendChild(bodyDiv);
+
+                // Tips
+                if (s.tips) {
+                    const tipsDiv = document.createElement('div');
+                    tipsDiv.style.cssText = 'background:var(--accent-light); border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:13px; line-height:1.6;';
+                    const tipsLabel = document.createElement('div');
+                    tipsLabel.style.cssText = 'font-size:12px; font-weight:600; color:var(--accent); margin-bottom:4px;';
+                    tipsLabel.textContent = '💡 ポイント・コツ';
+                    tipsDiv.appendChild(tipsLabel);
+                    s.tips.split('\n').forEach((line, i, arr) => {
+                        tipsDiv.appendChild(document.createTextNode(line));
+                        if (i < arr.length - 1) tipsDiv.appendChild(document.createElement('br'));
+                    });
+                    card.appendChild(tipsDiv);
+                }
+
+                // Like button
+                const actionDiv = document.createElement('div');
+                actionDiv.style.cssText = 'display:flex; align-items:center; gap:6px;';
+                const likeBtn = document.createElement('button');
+                likeBtn.style.cssText = 'background:none; border:1px solid ' + (isLiked ? 'var(--primary)' : 'var(--border)') + '; border-radius:20px; padding:6px 14px; cursor:pointer; font-size:13px; color:' + (isLiked ? 'var(--primary)' : 'var(--text-secondary)') + '; display:flex; align-items:center; gap:4px;';
+                likeBtn.textContent = (isLiked ? '👍' : '👍') + ' 参考になった ' + (likeCount > 0 ? likeCount : '');
+                likeBtn.addEventListener('click', () => toggleLikeScript(s.id));
+                actionDiv.appendChild(likeBtn);
+                card.appendChild(actionDiv);
+
+                el.appendChild(card);
+            });
+        } catch(e) {
+            console.error('Error rendering scripts:', e);
+        }
+    }
+
     // ===== COMMENTS =====
     let activeCommentFilter = 'all';
 
@@ -2297,6 +2592,7 @@
         renderObjections();
         renderDashboard();
         renderTeam();
+        renderScripts();
         renderComments();
         renderMotivation();
     })();
