@@ -1952,8 +1952,15 @@
 
     function renderDig() {
         const el = document.getElementById('dig-list');
-        // Merge built-in and custom dig items
-        let allDig = [...digData];
+        // 既存データに編集上書きを適用
+        const digEdits = JSON.parse(localStorage.getItem('teleapo-dig-edits') || '{}');
+        let allDig = digData.map((d, idx) => {
+            if (digEdits[idx]) {
+                return { ...d, ...digEdits[idx], _builtinIdx: idx };
+            }
+            return { ...d, _builtinIdx: idx };
+        });
+        // カスタム追加分をマージ
         try {
             const customDig = JSON.parse(localStorage.getItem('teleapo-custom-dig') || '[]');
             allDig = allDig.concat(customDig);
@@ -1969,6 +1976,14 @@
                 currentPhase = d.phase;
                 html += `<div class="phase-header">${d.phase}</div>`;
             }
+            // 既存アイテムは _builtinIdx で編集、カスタムは customId で編集
+            const isBuiltin = d._builtinIdx !== undefined;
+            const editCall = isBuiltin
+                ? `editBuiltinDigItem(${d._builtinIdx})`
+                : `editDigItem(${d.customId})`;
+            const deleteCall = d.customId
+                ? `deleteDigItem(${d.customId})`
+                : '';
             html += `
                 <div class="dig-card" onclick="this.classList.toggle('open')">
                     <div class="dig-header" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
@@ -1977,8 +1992,8 @@
                             <span class="dig-question">「${d.question}」</span>
                         </div>
                         <div style="display:flex; gap:4px;">
-                            ${d.customId ? `<button onclick="event.stopPropagation(); editDigItem(${d.customId});" style="background:none; border:none; font-size:14px; cursor:pointer; padding:4px;">✏️</button>` : ''}
-                            ${d.customId ? `<button onclick="event.stopPropagation(); deleteDigItem(${d.customId});" style="background:none; border:none; font-size:14px; cursor:pointer; padding:4px;">🗑️</button>` : ''}
+                            <button onclick="event.stopPropagation(); ${editCall};" style="background:none; border:none; font-size:14px; cursor:pointer; padding:4px;" title="編集">✏️</button>
+                            ${deleteCall ? `<button onclick="event.stopPropagation(); ${deleteCall};" style="background:none; border:none; font-size:14px; cursor:pointer; padding:4px;" title="削除">🗑️</button>` : ''}
                             <span class="qa-toggle">▼</span>
                         </div>
                     </div>
@@ -2892,6 +2907,40 @@
             alert('深掘り質問を更新しました！');
         } catch(e) {
             console.error('Error editing dig item:', e);
+        }
+    }
+
+    function editBuiltinDigItem(idx) {
+        try {
+            const digEdits = JSON.parse(localStorage.getItem('teleapo-dig-edits') || '{}');
+            // 現在の値（編集済みなら上書き分、なければ元データ）
+            const current = digEdits[idx] ? { ...digData[idx], ...digEdits[idx] } : digData[idx];
+
+            const question = prompt('質問を編集', current.question);
+            if (question === null) return;
+
+            const purpose = prompt('この質問の狙いを編集', current.purpose);
+            if (purpose === null) return;
+
+            const followUp = prompt('相手の回答への返しを編集', current.followUp);
+            if (followUp === null) return;
+
+            const timing = prompt('使うタイミングを編集', current.timing);
+            if (timing === null) return;
+
+            const emoji = prompt('絵文字を編集', current.emoji);
+            if (emoji === null) return;
+
+            const phase = prompt('フェーズを編集', current.phase);
+            if (phase === null) return;
+
+            digEdits[idx] = { question, purpose, followUp, timing, emoji, phase };
+            localStorage.setItem('teleapo-dig-edits', JSON.stringify(digEdits));
+            renderDigCategories();
+            renderDig();
+            alert('深掘り質問を更新しました！');
+        } catch(e) {
+            console.error('Error editing builtin dig item:', e);
         }
     }
 
