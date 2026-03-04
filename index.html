@@ -2864,16 +2864,25 @@
         if (records.length === 0) {
             histEl.innerHTML = `<div class="empty-state"><div class="emoji">📝</div><p>まだ記録がありません。今日の結果を入力してみましょう！</p></div>`;
         } else {
-            histEl.innerHTML = records.map(r => `
-                <div class="history-entry">
-                    <div class="history-date">${r.date}</div>
+            histEl.innerHTML = records.map((r, idx) => {
+                const realIdx = state.records.length - 1 - idx;
+                return `
+                <div class="history-entry" style="position:relative;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="history-date">${r.date}</div>
+                        <div style="display:flex; gap:6px;">
+                            <button onclick="editRecord(${realIdx})" style="background:var(--primary-light); color:var(--primary); border:none; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">編集</button>
+                            <button onclick="deleteRecord(${realIdx})" style="background:#fee2e2; color:#ef4444; border:none; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">削除</button>
+                        </div>
+                    </div>
                     <div class="history-stats">
                         <span>📞 <span class="history-stat-val">${r.calls}</span></span>
                         <span>🗣️ <span class="history-stat-val">${r.connects}</span></span>
                         <span>🎯 <span class="history-stat-val">${r.appointments}</span></span>
                     </div>
-                </div>
-            `).join('');
+                    ${r.memo ? '<div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">📝 ' + escapeHTML(r.memo) + '</div>' : ''}
+                </div>`;
+            }).join('');
         }
     }
 
@@ -2911,6 +2920,39 @@
         document.getElementById('input-memo').value = '';
 
         alert('記録を保存しました！ 💪');
+    }
+
+    function editRecord(idx) {
+        const r = state.records[idx];
+        if (!r) return;
+        const newCalls = prompt('架電数を入力：', r.calls);
+        if (newCalls === null) return;
+        const newConnects = prompt('接続数を入力：', r.connects);
+        if (newConnects === null) return;
+        const newApo = prompt('アポ数を入力：', r.appointments);
+        if (newApo === null) return;
+        const newMemo = prompt('メモ（任意）：', r.memo || '');
+        if (newMemo === null) return;
+        state.records[idx] = {
+            date: r.date,
+            calls: parseInt(newCalls) || 0,
+            connects: parseInt(newConnects) || 0,
+            appointments: parseInt(newApo) || 0,
+            memo: newMemo
+        };
+        saveState();
+        renderDashboard();
+        renderTeam();
+    }
+
+    function deleteRecord(idx) {
+        const r = state.records[idx];
+        if (!r) return;
+        if (!confirm(r.date + ' の記録を削除しますか？')) return;
+        state.records.splice(idx, 1);
+        saveState();
+        renderDashboard();
+        renderTeam();
     }
 
     // ===== MOTIVATION =====
