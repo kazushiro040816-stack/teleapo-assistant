@@ -1009,6 +1009,20 @@
         </div>
     </div>
 
+    <!-- お知らせポップアップ -->
+    <div id="announce-popup-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; padding:20px;">
+        <div style="background:var(--card); border-radius:16px; width:100%; max-width:520px; max-height:80vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); padding:28px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+                <span style="font-size:28px;">📢</span>
+                <h3 style="font-size:18px; color:var(--primary); margin:0;">お知らせ</h3>
+            </div>
+            <div id="announce-popup-content"></div>
+            <div style="text-align:center; margin-top:20px;">
+                <button onclick="dismissAnnouncements()" style="padding:12px 40px; border-radius:8px; border:none; background:var(--primary); color:white; font-size:15px; cursor:pointer; font-weight:600;">確認しました</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <div class="header">
         <div class="header-left">
@@ -1024,6 +1038,8 @@
             <button class="logout-btn" onclick="handleLogout()">ログアウト</button>
         </div>
         <div class="header-actions">
+            <button id="announce-bell-btn" class="font-btn" onclick="showAnnouncementList()" title="お知らせ" style="position:relative;">📢<span id="announce-badge" style="display:none; position:absolute; top:2px; right:2px; background:#ef4444; color:white; border-radius:50%; width:14px; height:14px; font-size:9px; line-height:14px; text-align:center;"></span></button>
+            <button id="admin-announce-btn" onclick="showPostAnnouncement()" style="display:none; background:rgba(255,255,255,0.2); border:none; color:white; padding:4px 8px; border-radius:6px; font-size:11px; cursor:pointer;" title="お知らせ投稿">+📢</button>
             <button class="font-btn" onclick="changeFontSize(-1)" title="文字を小さく">A-</button>
             <button class="font-btn" onclick="changeFontSize(1)" title="文字を大きく">A+</button>
             <button class="theme-toggle" onclick="toggleTheme()" title="テーマ切替">🌙</button>
@@ -1581,6 +1597,179 @@
         });
     }
 
+    // ===== お知らせ機能 =====
+    function showPostAnnouncement() {
+        if (!isAdmin) return;
+        showEditModal('お知らせを投稿', [
+            { label: 'タイトル', value: '', type: 'text', rows: 1 },
+            { label: '本文', value: '', type: 'text', rows: 5 },
+            { label: '重要度', value: '通常', type: 'text', rows: 1 }
+        ], function(results) {
+            var title = results[0].trim();
+            var body = results[1].trim();
+            var priority = results[2].trim() || '通常';
+            if (!title || !body) { alert('タイトルと本文を入力してください'); return; }
+            var announcement = {
+                id: Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+                title: title,
+                body: body,
+                priority: priority,
+                author: currentUser,
+                timestamp: new Date().toISOString(),
+                readBy: {}
+            };
+            if (firebaseReady && db) {
+                db.ref('announcements').push(announcement).then(function() {
+                    alert('お知らせを投稿しました');
+                    updateAnnounceBadge();
+                }).catch(function(e) { alert('投稿エラー: ' + e.message); });
+            }
+        });
+        // 重要度の説明を追加
+        setTimeout(function() {
+            var fields = document.getElementById('edit-modal-fields');
+            if (fields) {
+                var hint = document.createElement('div');
+                hint.style.cssText = 'font-size:12px; color:var(--text-secondary); margin-top:-10px; margin-bottom:10px;';
+                hint.textContent = '「重要」と入力すると赤枠で強調表示されます';
+                fields.appendChild(hint);
+            }
+        }, 120);
+    }
+
+    function showAnnouncementList() {
+        if (!firebaseReady || !db) { alert('Firebaseに接続されていません'); return; }
+        db.ref('announcements').orderByChild('timestamp').once('value').then(function(snapshot) {
+            var data = snapshot.val();
+            if (!data) {
+                showEditModal('お知らせ一覧', [{ label: '', value: 'お知らせはまだありません', type: 'text', rows: 1 }], function() {});
+                return;
+            }
+            var items = [];
+            Object.keys(data).forEach(function(key) {
+                var a = data[key];
+                a._key = key;
+                items.push(a);
+            });
+            items.sort(function(a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
+
+            var overlay = document.getElementById('announce-popup-overlay');
+            var content = document.getElementById('announce-popup-content');
+            var html = '';
+            items.forEach(function(a) {
+                var date = new Date(a.timestamp);
+                var timeStr = date.toLocaleDateString('ja-JP') + ' ' + date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                var isImportant = a.priority === '重要';
+                var borderColor = isImportant ? '#ef4444' : 'var(--border)';
+                var deleteBtn = isAdmin ? '<button onclick="deleteAnnouncement(\'' + a._key + '\')" style="background:none; border:none; color:#ef4444; font-size:12px; cursor:pointer; padding:2px 6px;">削除</button>' : '';
+                html += '<div style="border:2px solid ' + borderColor + '; border-radius:10px; padding:14px; margin-bottom:10px; background:var(--bg);">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                    '<div style="font-weight:700; font-size:15px;">' + (isImportant ? '<span style="color:#ef4444;">⚠️ </span>' : '') + escapeHTML(a.title) + '</div>' +
+                    deleteBtn + '</div>' +
+                    '<div style="font-size:11px; color:var(--text-secondary); margin:4px 0 8px;">' + escapeHTML(timeStr) + ' / ' + escapeHTML(a.author || '') + '</div>' +
+                    '<div style="font-size:14px; line-height:1.6; white-space:pre-wrap;">' + escapeHTML(a.body) + '</div></div>';
+            });
+            content.innerHTML = html;
+            overlay.style.display = 'flex';
+        });
+    }
+
+    function deleteAnnouncement(key) {
+        if (!isAdmin || !firebaseReady || !db) return;
+        if (!confirm('このお知らせを削除しますか？')) return;
+        db.ref('announcements/' + key).remove().then(function() {
+            showAnnouncementList();
+            updateAnnounceBadge();
+        });
+    }
+
+    function dismissAnnouncements() {
+        document.getElementById('announce-popup-overlay').style.display = 'none';
+        // 既読を記録
+        if (!firebaseReady || !db || !currentUser) return;
+        db.ref('announcements').once('value').then(function(snapshot) {
+            var data = snapshot.val();
+            if (!data) return;
+            var updates = {};
+            Object.keys(data).forEach(function(key) {
+                updates[key + '/readBy/' + encodeURIComponent(currentUser)] = true;
+            });
+            db.ref('announcements').update(updates);
+            // ローカルにも既読時刻を記録
+            localStorage.setItem('teleapo-announce-read-' + currentUser, new Date().toISOString());
+            updateAnnounceBadge();
+        });
+    }
+
+    function checkUnreadAnnouncements() {
+        if (!firebaseReady || !db || !currentUser) return;
+        db.ref('announcements').once('value').then(function(snapshot) {
+            var data = snapshot.val();
+            if (!data) return;
+            var encodedUser = encodeURIComponent(currentUser);
+            var unread = [];
+            Object.keys(data).forEach(function(key) {
+                var a = data[key];
+                if (!a.readBy || !a.readBy[encodedUser]) {
+                    unread.push(a);
+                }
+            });
+            if (unread.length > 0) {
+                // 未読お知らせをポップアップ表示
+                unread.sort(function(a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
+                var content = document.getElementById('announce-popup-content');
+                var html = '';
+                unread.forEach(function(a) {
+                    var date = new Date(a.timestamp);
+                    var timeStr = date.toLocaleDateString('ja-JP') + ' ' + date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                    var isImportant = a.priority === '重要';
+                    var borderColor = isImportant ? '#ef4444' : 'var(--border)';
+                    html += '<div style="border:2px solid ' + borderColor + '; border-radius:10px; padding:14px; margin-bottom:10px; background:var(--bg);">' +
+                        '<div style="font-weight:700; font-size:15px;">' + (isImportant ? '<span style="color:#ef4444;">⚠️ </span>' : '') + escapeHTML(a.title) + '</div>' +
+                        '<div style="font-size:11px; color:var(--text-secondary); margin:4px 0 8px;">' + escapeHTML(timeStr) + ' / ' + escapeHTML(a.author || '') + '</div>' +
+                        '<div style="font-size:14px; line-height:1.6; white-space:pre-wrap;">' + escapeHTML(a.body) + '</div></div>';
+                });
+                content.innerHTML = '<div style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">' + unread.length + '件の未読お知らせがあります</div>' + html;
+                document.getElementById('announce-popup-overlay').style.display = 'flex';
+            }
+            updateAnnounceBadge();
+        });
+    }
+
+    function updateAnnounceBadge() {
+        if (!firebaseReady || !db || !currentUser) return;
+        var badge = document.getElementById('announce-badge');
+        if (!badge) return;
+        db.ref('announcements').once('value').then(function(snapshot) {
+            var data = snapshot.val();
+            if (!data) { badge.style.display = 'none'; return; }
+            var encodedUser = encodeURIComponent(currentUser);
+            var count = 0;
+            Object.keys(data).forEach(function(key) {
+                if (!data[key].readBy || !data[key].readBy[encodedUser]) count++;
+            });
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+    }
+
+    function listenForAnnouncements() {
+        if (!firebaseReady || !db) return;
+        db.ref('announcements').on('child_added', function(snapshot) {
+            // 新しいお知らせが追加された時
+            if (!currentUser) return;
+            var a = snapshot.val();
+            var encodedUser = encodeURIComponent(currentUser);
+            if (a && (!a.readBy || !a.readBy[encodedUser])) {
+                updateAnnounceBadge();
+            }
+        });
+    }
+
     // ===== DATA（外部JSON対応: data/*.json から読み込み可能）=====
     // ※ インラインデータはフォールバック用。data/*.json を編集すればデータ管理が楽になります。
     let qaData = [
@@ -2094,6 +2283,11 @@
             syncAllSharedDataFromFirebase();
             listenForSharedDataChanges();
 
+            // お知らせ
+            var adminAnnBtn2 = document.getElementById('admin-announce-btn');
+            if (adminAnnBtn2) adminAnnBtn2.style.display = isAdmin ? 'inline-block' : 'none';
+            setTimeout(function() { checkUnreadAnnouncements(); listenForAnnouncements(); }, 500);
+
             renderUsersList();
         } else {
             currentUser = null;
@@ -2213,6 +2407,11 @@
         renderUsersList();
         renderScripts();
         renderComments();
+
+        // お知らせ：管理者ボタン表示、未読チェック、リアルタイム監視
+        var adminAnnBtn = document.getElementById('admin-announce-btn');
+        if (adminAnnBtn) adminAnnBtn.style.display = isAdmin ? 'inline-block' : 'none';
+        setTimeout(function() { checkUnreadAnnouncements(); listenForAnnouncements(); }, 500);
     }
 
     function handleLogout() {
