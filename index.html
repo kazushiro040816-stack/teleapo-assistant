@@ -1067,7 +1067,7 @@
             <span class="nav-icon">👥</span>チーム
         </div>
         <div class="nav-item" onclick="switchTab('comments', this)">
-            <span class="nav-icon">💬</span>意見交換
+            <span class="nav-icon">💬</span>意見交換・アドバイス
         </div>
         <div class="nav-item" onclick="switchTab('audio', this)">
             <span class="nav-icon">🎧</span>アポ・資料送付音声
@@ -1302,52 +1302,71 @@
 
         <!-- Comments Tab -->
         <div id="tab-comments" class="tab-content">
-            <h2 style="margin-bottom:16px; font-size:18px;">💬 意見交換</h2>
-            <p style="margin-bottom:20px; color:var(--text-secondary); font-size:14px;">チーム内で成功事例や質問をシェア。一緒に成長しよう！</p>
+            <h2 style="margin-bottom:16px; font-size:18px;">💬 意見交換・アドバイス</h2>
+            <p style="margin-bottom:20px; color:var(--text-secondary); font-size:14px;">チーム内で成功事例や質問をシェア。アドバイスも共有して一緒に成長しよう！</p>
 
-            <!-- Comment Form -->
-            <div class="comment-form">
-                <h3 style="margin-bottom:16px; font-size:16px;">✍️ コメントを投稿</h3>
-                <div class="comment-form-group">
-                    <label>カテゴリ</label>
-                    <select id="comment-category">
-                        <option value="改善提案">改善提案</option>
-                        <option value="成功事例共有">成功事例共有</option>
-                        <option value="質問">質問</option>
-                        <option value="その他">その他</option>
-                    </select>
+            <!-- 横並びレイアウト -->
+            <div style="display:flex; gap:20px; align-items:flex-start;">
+
+                <!-- 左: 意見交換 -->
+                <div style="flex:1; min-width:0;">
+                    <h3 style="margin-bottom:12px; font-size:16px; padding-bottom:8px; border-bottom:2px solid var(--primary);">💬 意見交換</h3>
+
+                    <!-- Comment Form -->
+                    <div class="comment-form">
+                        <h4 style="margin-bottom:12px; font-size:14px;">✍️ コメントを投稿</h4>
+                        <div class="comment-form-group">
+                            <label>カテゴリ</label>
+                            <select id="comment-category">
+                                <option value="改善提案">改善提案</option>
+                                <option value="成功事例共有">成功事例共有</option>
+                                <option value="質問">質問</option>
+                                <option value="その他">その他</option>
+                            </select>
+                        </div>
+                        <div class="comment-form-group">
+                            <label>コメント</label>
+                            <textarea id="comment-text" placeholder="思いっきり投稿してください！チーム全体で学べます。"></textarea>
+                        </div>
+                        <button onclick="submitComment()">投稿する 💬</button>
+                    </div>
+
+                    <!-- Comment Filters -->
+                    <div class="comment-filters">
+                        <div class="comment-filter-chip active" onclick="filterComments('all', this)">すべて</div>
+                        <div class="comment-filter-chip" onclick="filterComments('改善提案', this)">改善提案</div>
+                        <div class="comment-filter-chip" onclick="filterComments('成功事例共有', this)">成功事例共有</div>
+                        <div class="comment-filter-chip" onclick="filterComments('質問', this)">質問</div>
+                        <div class="comment-filter-chip" onclick="filterComments('その他', this)">その他</div>
+                    </div>
+
+                    <!-- Comments List -->
+                    <div id="comments-list"></div>
                 </div>
-                <div class="comment-form-group">
-                    <label>コメント</label>
-                    <textarea id="comment-text" placeholder="思いっきり投稿してください！チーム全体で学べます。"></textarea>
+
+                <!-- 右: アドバイス -->
+                <div style="flex:1; min-width:0;">
+                    <h3 style="margin-bottom:12px; font-size:16px; padding-bottom:8px; border-bottom:2px solid #f59e0b;">📌 アドバイス</h3>
+                    <p style="margin-bottom:12px; color:var(--text-secondary); font-size:12px;">誰でも追加・編集・削除できます</p>
+
+                    <div style="background:var(--card); border-radius:var(--radius); padding:14px; margin-bottom:14px; box-shadow:var(--shadow);">
+                        <h4 style="margin-bottom:8px; font-size:13px;">➕ アドバイスを追加</h4>
+                        <input type="text" id="add-advice-title" placeholder="タイトル（例：受付突破のコツ）" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:13px; margin-bottom:6px; box-sizing:border-box;">
+                        <textarea id="add-advice-body" rows="3" placeholder="アドバイスの詳細" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:13px; margin-bottom:8px; box-sizing:border-box;"></textarea>
+                        <button onclick="addAdvice()" style="padding:6px 14px; background:#f59e0b; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px;">追加</button>
+                    </div>
+                    <div id="advice-list"></div>
                 </div>
-                <button onclick="submitComment()">投稿する 💬</button>
             </div>
 
-            <!-- Comment Filters -->
-            <div class="comment-filters">
-                <div class="comment-filter-chip active" onclick="filterComments('all', this)">すべて</div>
-                <div class="comment-filter-chip" onclick="filterComments('改善提案', this)">改善提案</div>
-                <div class="comment-filter-chip" onclick="filterComments('成功事例共有', this)">成功事例共有</div>
-                <div class="comment-filter-chip" onclick="filterComments('質問', this)">質問</div>
-                <div class="comment-filter-chip" onclick="filterComments('その他', this)">その他</div>
-            </div>
-
-            <!-- Comments List -->
-            <div id="comments-list"></div>
-
-            <!-- アドバイス Section -->
-            <div style="margin-top:32px; border-top:2px solid var(--border); padding-top:24px;">
-                <h2 style="margin-bottom:12px; font-size:18px;">📌 アドバイス</h2>
-                <p style="margin-bottom:16px; color:var(--text-secondary); font-size:13px;">テレアポに関するアドバイスやコツをチームで共有しよう。誰でも追加・編集・削除できます。</p>
-                <div style="background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:16px; box-shadow:var(--shadow);">
-                    <h4 style="margin-bottom:10px; font-size:14px;">➕ アドバイスを追加</h4>
-                    <input type="text" id="add-advice-title" placeholder="タイトル（例：受付突破のコツ）" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:13px; margin-bottom:6px;">
-                    <textarea id="add-advice-body" rows="4" placeholder="アドバイスの詳細（例：最初の10秒で興味を引くことが重要。具体的な数字を出すと効果的。）" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:13px; margin-bottom:8px;"></textarea>
-                    <button onclick="addAdvice()" style="padding:6px 14px; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px;">追加</button>
-                </div>
-                <div id="advice-list"></div>
-            </div>
+            <!-- スマホ用: 横並びが狭い場合は縦に -->
+            <style>
+                @media (max-width: 768px) {
+                    #tab-comments > div:nth-child(3) {
+                        flex-direction: column !important;
+                    }
+                }
+            </style>
         </div>
 
         <!-- アポ・資料送付音声 Tab -->
